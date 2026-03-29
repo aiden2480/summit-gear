@@ -1,7 +1,7 @@
 import ProductCard from "./ProductCard";
 import "./ProductGrid.css";
 
-export default function ProductGrid({ products, loading, onAddToCart, onEdit, onDelete }) {
+export default function ProductGrid({ products, loading, onAddToCart }) {
   if (loading) {
     return (
       <div className="product-grid__loading" role="status">
@@ -28,8 +28,6 @@ export default function ProductGrid({ products, loading, onAddToCart, onEdit, on
           <ProductCard
             product={product}
             onAddToCart={onAddToCart}
-            onEdit={onEdit}
-            onDelete={onDelete}
           />
         </div>
       ))}

@@ -37,29 +37,6 @@ export default function useProducts(addToast) {
     fetchCategories();
   }, [fetchCategories]);
 
-  const createProduct = async (data) => {
-    const product = await productApi.create(data);
-    await fetchProducts();
-    await fetchCategories();
-    addToast("Product added!");
-    return product;
-  };
-
-  const updateProduct = async (id, data) => {
-    const product = await productApi.update(id, data);
-    await fetchProducts();
-    await fetchCategories();
-    addToast("Product updated!");
-    return product;
-  };
-
-  const deleteProduct = async (id) => {
-    await productApi.delete(id);
-    await fetchProducts();
-    await fetchCategories();
-    addToast("Product deleted");
-  };
-
   return {
     products,
     categories,
@@ -68,8 +45,5 @@ export default function useProducts(addToast) {
     searchQuery,
     setSearchQuery,
     loading,
-    createProduct,
-    updateProduct,
-    deleteProduct,
   };
 }

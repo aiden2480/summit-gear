@@ -74,46 +74,6 @@ async def create_product(request):
     return web.json_response(product.to_dict(), status=201)
 
 
-@routes.put("/api/products/{id}")
-async def update_product(request):
-    product_id = int(request.match_info["id"])
-    data = await request.json()
-
-    async with get_session() as session:
-        result = await session.execute(select(Product).where(Product.id == product_id))
-        product = result.scalar()
-
-        if not product:
-            raise web.HTTPNotFound(text="Product not found")
-
-        for field in ["name", "description", "price", "image_url", "category", "stock"]:
-            if field in data:
-                setattr(product, field, data[field])
-
-        await session.commit()
-        await session.refresh(product)
-
-    return web.json_response(product.to_dict())
-
-
-@routes.delete("/api/products/{id}")
-async def delete_product(request):
-    product_id = int(request.match_info["id"])
-    
-    async with get_session() as session:
-        result = await session.execute(select(Product).where(Product.id == product_id))
-        product = result.scalar()
-
-        if not product:
-            raise web.HTTPNotFound(text="Product not found")
-
-        await session.execute(delete(CartItem).where(CartItem.product_id == product_id))
-        await session.delete(product)
-        await session.commit()
-
-    return web.json_response({"message": "Product deleted"})
-
-
 @routes.get("/api/categories")
 async def get_categories(request):
     async with get_session() as session:

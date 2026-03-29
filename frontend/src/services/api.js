@@ -26,8 +26,6 @@ export const productApi = {
   },
   getById: (id) => get(`/products/${id}`),
   create: (data) => post("/products", data),
-  update: (id, data) => put(`/products/${id}`, data),
-  delete: (id) => del(`/products/${id}`),
 };
 
 export const cartApi = {

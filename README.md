@@ -2,94 +2,91 @@
 
 ## Summary
 
-ShopWave is a single-page e-commerce shopping cart application that allows users to browse products, filter by category, search, and manage a shopping cart. It demonstrates full CRUD (Create, Read, Update, Delete) operations on a database through a polished, responsive web interface.
+ShopWave is a single-page e-commerce application that allows users to browse products, filter by category, search, add items to a shopping cart, and complete a checkout process. The application demonstrates full CRUD operations on a database with a focus on a smooth, responsive user experience.
 
 ## Tech Stack
 
-| Layer       | Technology                                |
-| ----------- | ----------------------------------------- |
-| Frontend    | React 19 (via Vite)                       |
-| Styling     | Vanilla CSS with CSS custom properties    |
-| Backend     | Python aiohttp.web (async HTTP framework) |
-| Database    | SQLite (via aiosqlite)                     |
-| API         | RESTful JSON endpoints with CORS support  |
+| Layer       | Technology                                      |
+| ----------- | ----------------------------------------------- |
+| Frontend    | React 19 (Vite)                                 |
+| Styling     | Vanilla CSS with CSS custom properties          |
+| Backend     | Python aiohttp (async HTTP framework)           |
+| Database    | SQLite with async SQLAlchemy ORM                |
+| API         | RESTful JSON endpoints with CORS                |
 
 ## Features
 
-- **Product Browsing** — responsive grid of product cards with images, prices, and stock indicators
-- **Category Filtering** — filter products by category with pill-style toggle buttons
-- **Product Search** — real-time search bar that filters products by name or description
-- **Shopping Cart Drawer** — slide-in cart panel with quantity controls and running total
-- **Product Management** — add, edit, and delete products via a modal dialog (full CRUD)
-- **Stock Tracking** — out-of-stock and low-stock badges; quantity capped to available stock
-- **Toast Notifications** — animated success/error feedback for every user action
-- **Responsive Design** — mobile-first layout that adapts from phone to desktop
-- **Accessibility** — ARIA labels, keyboard navigability, focus outlines, semantic HTML
-- **Smooth Animations** — card hover effects, drawer slide transitions, modal pop-in, badge pop
+- Product browsing with responsive grid layout
+- Category filtering with dynamic pill buttons
+- Real-time product search by name or description
+- Shopping cart drawer with quantity controls
+- Stock tracking with out-of-stock and low-stock indicators
+- Checkout flow with order confirmation and random order ID generation
+- Stock reduction on successful checkout
+- Toast notifications for user feedback
+- Responsive design with mobile-first approach
+- Keyboard navigation and ARIA labels
+- Smooth animations and transitions
 
 ## CRUD Operations
 
-| Operation | Entity   | Action                        |
-| --------- | -------- | ----------------------------- |
-| Create    | Product  | Add a new product via modal   |
-| Create    | Cart     | Add product to shopping cart  |
-| Read      | Product  | Browse/search/filter products |
-| Read      | Cart     | View cart items and total     |
-| Update    | Product  | Edit product details          |
-| Update    | Cart     | Change item quantity in cart   |
-| Delete    | Product  | Remove a product entirely     |
-| Delete    | Cart     | Remove item or clear cart     |
+| Operation | Resource     | Endpoint                 |
+| --------- | ------------ | ------------------------ |
+| Read      | Products     | GET /api/products        |
+| Create    | Cart Items   | POST /api/cart           |
+| Read      | Cart         | GET /api/cart            |
+| Update    | Cart Items   | PUT /api/cart/{id}       |
+| Delete    | Cart Items   | DELETE /api/cart/{id}    |
+| Delete    | Cart         | DELETE /api/cart         |
+| POST      | Checkout     | POST /api/checkout       |
 
-## Folder Structure
+## Directory Structure
 
 ```
-assignment1/
-├── backend/
-│   ├── app.py                 # aiohttp server entry point
-│   ├── requirements.txt       # Python dependencies
-│   ├── models/
-│   │   └── database.py        # SQLite schema, seed logic, DB connection
-│   └── routes/
-│       ├── products.py        # Product CRUD API endpoints
-│       └── cart.py            # Cart CRUD API endpoints
-├── frontend/
-│   ├── index.html             # Single HTML entry point
-│   ├── .npmrc                 # npm registry config
-│   ├── package.json           # Node dependencies and scripts
-│   ├── vite.config.js         # Vite build config
-│   └── src/
-│       ├── main.jsx           # React entry point
-│       ├── App.jsx            # Root component with state management
-│       ├── App.css            # Global styles and CSS reset
-│       ├── services/
-│       │   └── api.js         # API client with fetch wrapper
-│       ├── hooks/
-│       │   ├── useProducts.js # Product state and CRUD logic
-│       │   ├── useCart.js     # Cart state and CRUD logic
-│       │   └── useToast.js   # Toast notification state
-│       └── components/
-│           ├── Header.jsx/css         # Top navigation with cart badge
-│           ├── SearchBar.jsx/css      # Product search input
-│           ├── CategoryFilter.jsx/css # Category pill buttons
-│           ├── ProductGrid.jsx/css    # Responsive product grid
-│           ├── ProductCard.jsx/css    # Individual product card
-│           ├── CartDrawer.jsx/css     # Slide-in cart panel
-│           ├── CartItem.jsx/css       # Cart line item with controls
-│           ├── ProductModal.jsx/css   # Add/Edit product form dialog
-│           └── Toast.jsx/css          # Notification toasts
-├── seed_data.json             # Initial product data (12 items)
-├── database_export.sql        # SQLite database export
-└── README.md                  # This file
+backend/
+  app.py                  Entry point, sets up routes and CORS
+  requirements.txt        Python dependencies
+  database/
+    __init__.py          Session factory and engine setup
+    models.py            SQLAlchemy ORM models (Product, CartItem)
+  routes/
+    products.py          Product API endpoints
+    cart.py              Cart and checkout endpoints
+
+frontend/
+  index.html             HTML entry point
+  package.json           npm scripts and dependencies
+  vite.config.js         Build configuration
+  src/
+    main.jsx             React DOM render
+    App.jsx              Root component
+    App.css              Global styles
+    services/
+      api.js             API client (request helpers)
+    hooks/
+      useProducts.js     Product fetching and filtering
+      useCart.js         Cart state management
+      useToast.js        Toast notification state
+    components/
+      Header.jsx         Navigation with cart badge
+      SearchBar.jsx      Product search input
+      CategoryFilter.jsx Category filter pills
+      ProductGrid.jsx    Product list container
+      ProductCard.jsx    Individual product card
+      CartDrawer.jsx     Slide-in cart panel
+      CartItem.jsx       Cart line item
+      OrderSuccess.jsx   Checkout confirmation
+      Toast.jsx          Notification component
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.9+
+- Python 3.10+
 - Node.js 18+
 
-### Backend
+### Backend Setup
 
 ```bash
 cd backend
@@ -97,9 +94,9 @@ pip install -r requirements.txt
 python app.py
 ```
 
-The API server starts at `http://localhost:8080`. On first run it automatically creates the SQLite database and seeds it with 12 products from `seed_data.json`.
+The server starts at `http://localhost:8080`. The database is created and seeded automatically on first run.
 
-### Frontend
+### Frontend Setup
 
 ```bash
 cd frontend
@@ -109,6 +106,6 @@ npm run dev
 
 The development server starts at `http://localhost:5173`.
 
-## Challenges Overcome
+## Key Implementation Details
 
-Building a fully async Python backend with aiohttp required careful handling of database connections using context managers to avoid connection leaks. Implementing the cart drawer as a slide-in panel needed precise CSS transitions combined with React state to handle open/close animations smoothly without layout shifts. Ensuring proper stock validation across the cart and product management flows required coordinating frontend and backend validation — the backend enforces stock limits while the frontend provides immediate feedback. Achieving accessibility across all interactive components (modals, drawers, quantity buttons) required attention to focus management, ARIA attributes, and keyboard navigation patterns.
+The backend uses async SQLAlchemy with aiosqlite to handle concurrent requests efficiently. Product data is read-only and seeded from JSON on startup. The checkout endpoint atomically reduces stock for all cart items before clearing the cart, ensuring consistency. The frontend uses React hooks for state management without additional libraries. The cart drawer implements smooth CSS transitions with React state for seamless UX. All API errors are handled gracefully with toast notifications to provide clear user feedback.
