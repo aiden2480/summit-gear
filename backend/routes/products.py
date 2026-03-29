@@ -1,5 +1,5 @@
 from aiohttp import web
-from models.database import get_db
+from database import get_db
 
 
 routes = web.RouteTableDef()

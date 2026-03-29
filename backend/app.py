@@ -5,7 +5,7 @@ import aiohttp_cors
 
 sys.path.insert(0, os.path.dirname(__file__))
 
-from models.database import init_db
+from database import init_db
 from routes.products import routes as product_routes
 from routes.cart import routes as cart_routes
 
