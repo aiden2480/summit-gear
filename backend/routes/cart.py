@@ -1,5 +1,8 @@
 from aiohttp import web
-from database import get_db
+from sqlalchemy import select, delete
+from sqlalchemy.orm import joinedload
+from database import get_session
+from database.models import CartItem, Product
 
 
 routes = web.RouteTableDef()
@@ -7,17 +10,13 @@ routes = web.RouteTableDef()
 
 @routes.get("/api/cart")
 async def get_cart(request):
-    async with get_db() as db:
-        db.row_factory = _row_factory
-        cursor = await db.execute("""
-            SELECT c.id, c.product_id, c.quantity,
-                   p.name, p.price, p.image_url, p.stock
-            FROM cart_items c
-            JOIN products p ON c.product_id = p.id
-            ORDER BY c.id
-        """)
-        items = await cursor.fetchall()
-    return web.json_response(items)
+    async with get_session() as session:
+        result = await session.execute(
+            select(CartItem).options(joinedload(CartItem.product)).order_by(CartItem.id)
+        )
+        items = result.unique().scalars().all()
+
+    return web.json_response([item.to_dict() for item in items])
 
 
 @routes.post("/api/cart")
@@ -31,46 +30,40 @@ async def add_to_cart(request):
     if quantity < 1:
         raise web.HTTPBadRequest(text="Quantity must be at least 1")
 
-    async with get_db() as db:
-        db.row_factory = _row_factory
-        cursor = await db.execute("SELECT * FROM products WHERE id = ?", (product_id,))
-        product = await cursor.fetchone()
+    async with get_session() as session:
+        # Get product
+        result = await session.execute(select(Product).where(Product.id == product_id))
+        product = result.scalar()
         if not product:
             raise web.HTTPNotFound(text="Product not found")
 
-        if product["stock"] < quantity:
+        if product.stock < quantity:
             raise web.HTTPBadRequest(text="Not enough stock available")
 
-        cursor = await db.execute(
-            "SELECT * FROM cart_items WHERE product_id = ?", (product_id,)
-        )
-        existing = await cursor.fetchone()
+        # Check if product already in cart
+        result = await session.execute(select(CartItem).where(CartItem.product_id == product_id))
+        existing = result.scalar()
 
         if existing:
-            new_qty = existing["quantity"] + quantity
-            if new_qty > product["stock"]:
+            new_qty = existing.quantity + quantity
+            if new_qty > product.stock:
                 raise web.HTTPBadRequest(text="Not enough stock available")
-            await db.execute(
-                "UPDATE cart_items SET quantity = ? WHERE id = ?",
-                (new_qty, existing["id"]),
-            )
+            existing.quantity = new_qty
         else:
-            await db.execute(
-                "INSERT INTO cart_items (product_id, quantity) VALUES (?, ?)",
-                (product_id, quantity),
-            )
-        await db.commit()
+            cart_item = CartItem(product_id=product_id, quantity=quantity)
+            session.add(cart_item)
 
-        cursor = await db.execute("""
-            SELECT c.id, c.product_id, c.quantity,
-                   p.name, p.price, p.image_url, p.stock
-            FROM cart_items c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.product_id = ?
-        """, (product_id,))
-        item = await cursor.fetchone()
+        await session.commit()
+        
+        # Fetch updated item with product relationship
+        result = await session.execute(
+            select(CartItem)
+            .where(CartItem.product_id == product_id)
+            .options(joinedload(CartItem.product))
+        )
+        item = result.unique().scalar()
 
-    return web.json_response(item, status=201)
+    return web.json_response(item.to_dict(), status=201)
 
 
 @routes.put("/api/cart/{id}")
@@ -84,59 +77,48 @@ async def update_cart_item(request):
     if quantity < 1:
         raise web.HTTPBadRequest(text="Quantity must be at least 1")
 
-    async with get_db() as db:
-        db.row_factory = _row_factory
-        cursor = await db.execute("""
-            SELECT c.*, p.stock FROM cart_items c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.id = ?
-        """, (item_id,))
-        item = await cursor.fetchone()
+    async with get_session() as session:
+        result = await session.execute(
+            select(CartItem)
+            .where(CartItem.id == item_id)
+            .options(joinedload(CartItem.product))
+        )
+        item = result.unique().scalar()
 
         if not item:
             raise web.HTTPNotFound(text="Cart item not found")
 
-        if quantity > item["stock"]:
+        if quantity > item.product.stock:
             raise web.HTTPBadRequest(text="Not enough stock available")
 
-        await db.execute(
-            "UPDATE cart_items SET quantity = ? WHERE id = ?",
-            (quantity, item_id),
-        )
-        await db.commit()
+        item.quantity = quantity
+        await session.commit()
+        await session.refresh(item)
 
-        cursor = await db.execute("""
-            SELECT c.id, c.product_id, c.quantity,
-                   p.name, p.price, p.image_url, p.stock
-            FROM cart_items c
-            JOIN products p ON c.product_id = p.id
-            WHERE c.id = ?
-        """, (item_id,))
-        updated = await cursor.fetchone()
-
-    return web.json_response(updated)
+    return web.json_response(item.to_dict())
 
 
 @routes.delete("/api/cart/{id}")
 async def remove_from_cart(request):
     item_id = int(request.match_info["id"])
-    async with get_db() as db:
-        cursor = await db.execute("SELECT id FROM cart_items WHERE id = ?", (item_id,))
-        if not await cursor.fetchone():
+    
+    async with get_session() as session:
+        result = await session.execute(select(CartItem).where(CartItem.id == item_id))
+        item = result.scalar()
+
+        if not item:
             raise web.HTTPNotFound(text="Cart item not found")
-        await db.execute("DELETE FROM cart_items WHERE id = ?", (item_id,))
-        await db.commit()
+
+        await session.delete(item)
+        await session.commit()
+
     return web.json_response({"message": "Item removed from cart"})
 
 
 @routes.delete("/api/cart")
 async def clear_cart(request):
-    async with get_db() as db:
-        await db.execute("DELETE FROM cart_items")
-        await db.commit()
+    async with get_session() as session:
+        await session.execute(delete(CartItem))
+        await session.commit()
+
     return web.json_response({"message": "Cart cleared"})
-
-
-def _row_factory(cursor, row):
-    columns = [col[0] for col in cursor.description]
-    return dict(zip(columns, row))

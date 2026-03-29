@@ -28,10 +28,8 @@ export const productApi = {
 
 export const cartApi = {
   getAll: () => request("/cart"),
-  add: (productId, quantity = 1) =>
-    request("/cart", { method: "POST", body: JSON.stringify({ product_id: productId, quantity }) }),
-  update: (id, quantity) =>
-    request(`/cart/${id}`, { method: "PUT", body: JSON.stringify({ quantity }) }),
+  add: (productId, quantity = 1) => request("/cart", { method: "POST", body: JSON.stringify({ product_id: productId, quantity }) }),
+  update: (id, quantity) => request(`/cart/${id}`, { method: "PUT", body: JSON.stringify({ quantity }) }),
   remove: (id) => request(`/cart/${id}`, { method: "DELETE" }),
   clear: () => request("/cart", { method: "DELETE" }),
 };

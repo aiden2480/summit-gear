@@ -1,5 +1,7 @@
 from aiohttp import web
-from database import get_db
+from sqlalchemy import select, delete
+from database import get_session
+from database.models import Product, CartItem
 
 
 routes = web.RouteTableDef()
@@ -10,39 +12,34 @@ async def get_products(request):
     category = request.query.get("category")
     search = request.query.get("search")
 
-    query = "SELECT * FROM products"
-    params = []
-    conditions = []
+    async with get_session() as session:
+        query = select(Product)
+        
+        if category and category != "All":
+            query = query.where(Product.category == category)
+        if search:
+            query = query.where(
+                (Product.name.ilike(f"%{search}%")) | 
+                (Product.description.ilike(f"%{search}%"))
+            )
+        
+        query = query.order_by(Product.id)
+        result = await session.execute(query)
+        products = result.scalars().all()
 
-    if category and category != "All":
-        conditions.append("category = ?")
-        params.append(category)
-    if search:
-        conditions.append("(name LIKE ? OR description LIKE ?)")
-        params.extend([f"%{search}%", f"%{search}%"])
-
-    if conditions:
-        query += " WHERE " + " AND ".join(conditions)
-
-    query += " ORDER BY id"
-
-    async with get_db() as db:
-        db.row_factory = _row_factory
-        cursor = await db.execute(query, params)
-        products = await cursor.fetchall()
-    return web.json_response(products)
+    return web.json_response([p.to_dict() for p in products])
 
 
 @routes.get("/api/products/{id}")
 async def get_product(request):
     product_id = int(request.match_info["id"])
-    async with get_db() as db:
-        db.row_factory = _row_factory
-        cursor = await db.execute("SELECT * FROM products WHERE id = ?", (product_id,))
-        product = await cursor.fetchone()
+    async with get_session() as session:
+        result = await session.execute(select(Product).where(Product.id == product_id))
+        product = result.scalar()
+    
     if not product:
         raise web.HTTPNotFound(text="Product not found")
-    return web.json_response(product)
+    return web.json_response(product.to_dict())
 
 
 @routes.post("/api/products")
@@ -60,19 +57,21 @@ async def create_product(request):
     if data["stock"] < 0:
         raise web.HTTPBadRequest(text="Stock cannot be negative")
 
-    async with get_db() as db:
-        cursor = await db.execute(
-            "INSERT INTO products (name, description, price, image_url, category, stock) VALUES (?, ?, ?, ?, ?, ?)",
-            (data["name"], data["description"], float(data["price"]), data["image_url"], data["category"], int(data["stock"])),
-        )
-        await db.commit()
-        product_id = cursor.lastrowid
+    product = Product(
+        name=data["name"],
+        description=data["description"],
+        price=float(data["price"]),
+        image_url=data["image_url"],
+        category=data["category"],
+        stock=int(data["stock"]),
+    )
 
-        db.row_factory = _row_factory
-        cursor = await db.execute("SELECT * FROM products WHERE id = ?", (product_id,))
-        product = await cursor.fetchone()
+    async with get_session() as session:
+        session.add(product)
+        await session.commit()
+        await session.refresh(product)
 
-    return web.json_response(product, status=201)
+    return web.json_response(product.to_dict(), status=201)
 
 
 @routes.put("/api/products/{id}")
@@ -80,54 +79,47 @@ async def update_product(request):
     product_id = int(request.match_info["id"])
     data = await request.json()
 
-    async with get_db() as db:
-        cursor = await db.execute("SELECT id FROM products WHERE id = ?", (product_id,))
-        if not await cursor.fetchone():
+    async with get_session() as session:
+        result = await session.execute(select(Product).where(Product.id == product_id))
+        product = result.scalar()
+
+        if not product:
             raise web.HTTPNotFound(text="Product not found")
 
-        fields = []
-        values = []
         for field in ["name", "description", "price", "image_url", "category", "stock"]:
             if field in data:
-                fields.append(f"{field} = ?")
-                values.append(data[field])
+                setattr(product, field, data[field])
 
-        if not fields:
-            raise web.HTTPBadRequest(text="No fields to update")
+        await session.commit()
+        await session.refresh(product)
 
-        values.append(product_id)
-        await db.execute(f"UPDATE products SET {', '.join(fields)} WHERE id = ?", values)
-        await db.commit()
-
-        db.row_factory = _row_factory
-        cursor = await db.execute("SELECT * FROM products WHERE id = ?", (product_id,))
-        product = await cursor.fetchone()
-
-    return web.json_response(product)
+    return web.json_response(product.to_dict())
 
 
 @routes.delete("/api/products/{id}")
 async def delete_product(request):
     product_id = int(request.match_info["id"])
-    async with get_db() as db:
-        cursor = await db.execute("SELECT id FROM products WHERE id = ?", (product_id,))
-        if not await cursor.fetchone():
+    
+    async with get_session() as session:
+        result = await session.execute(select(Product).where(Product.id == product_id))
+        product = result.scalar()
+
+        if not product:
             raise web.HTTPNotFound(text="Product not found")
-        await db.execute("DELETE FROM cart_items WHERE product_id = ?", (product_id,))
-        await db.execute("DELETE FROM products WHERE id = ?", (product_id,))
-        await db.commit()
+
+        await session.execute(delete(CartItem).where(CartItem.product_id == product_id))
+        await session.delete(product)
+        await session.commit()
+
     return web.json_response({"message": "Product deleted"})
 
 
 @routes.get("/api/categories")
 async def get_categories(request):
-    async with get_db() as db:
-        cursor = await db.execute("SELECT DISTINCT category FROM products ORDER BY category")
-        rows = await cursor.fetchall()
-    categories = [row[0] for row in rows]
-    return web.json_response(categories)
+    async with get_session() as session:
+        result = await session.execute(
+            select(Product.category).distinct().order_by(Product.category)
+        )
+        categories = result.scalars().all()
 
-
-def _row_factory(cursor, row):
-    columns = [col[0] for col in cursor.description]
-    return dict(zip(columns, row))
+    return web.json_response(list(categories))
