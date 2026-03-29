@@ -1,12 +1,43 @@
+import { useState } from "react";
 import "./CartDrawer.css";
 import CartItem from "./CartItem";
+import OrderSuccess from "./OrderSuccess";
 
 export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear }) {
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderId, setOrderId] = useState("");
+
+  const generateOrderId = () => {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+    return `ORD-${timestamp}-${random}`;
+  };
+
+  const handleCheckout = () => {
+    const newOrderId = generateOrderId();
+    setOrderId(newOrderId);
+    setOrderPlaced(true);
+    onClear();
+  };
+
+  const handleOrderClose = () => {
+    setOrderPlaced(false);
+    onClose();
+  };
+
+  if (orderPlaced) {
+    return <OrderSuccess orderId={orderId} onClose={handleOrderClose} />;
+  }
+
+  if (!open) {
+    return null;
+  }
+
   return (
     <>
-      <div className={`cart-overlay ${open ? "cart-overlay--visible" : ""}`} onClick={onClose} aria-hidden="true" />
+      <div className="cart-overlay cart-overlay--visible" onClick={onClose} aria-hidden="true" />
       <aside
-        className={`cart-drawer ${open ? "cart-drawer--open" : ""}`}
+        className="cart-drawer cart-drawer--open"
         role="dialog"
         aria-label="Shopping cart"
         aria-modal="true"
@@ -47,7 +78,11 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
               <span>Total</span>
               <span className="cart-drawer__total-price">${cartTotal.toFixed(2)}</span>
             </div>
-            <button className="btn btn--primary cart-drawer__checkout">
+            <button 
+              type="button"
+              className="btn btn--primary cart-drawer__checkout" 
+              onClick={handleCheckout}
+            >
               Checkout
             </button>
             <button className="btn btn--text" onClick={onClear}>
