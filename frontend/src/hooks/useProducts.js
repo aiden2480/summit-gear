@@ -29,6 +29,15 @@ export default function useProducts(addToast) {
     }
   }, []);
 
+  const refreshStock = useCallback(async () => {
+    try {
+      const data = await productApi.getAll(selectedCategory, searchQuery);
+      setProducts(data);
+    } catch {
+      /* silent fail on stock refresh */
+    }
+  }, [selectedCategory, searchQuery]);
+
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
@@ -45,5 +54,7 @@ export default function useProducts(addToast) {
     searchQuery,
     setSearchQuery,
     loading,
+    fetchProducts,
+    refreshStock,
   };
 }

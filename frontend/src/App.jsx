@@ -14,7 +14,7 @@ function App() {
   const { toasts, addToast } = useToast();
   const {
     products, categories, selectedCategory, setSelectedCategory,
-    searchQuery, setSearchQuery, loading,
+    searchQuery, setSearchQuery, loading, refreshStock,
   } = useProducts(addToast);
   const { cartItems, cartCount, cartTotal, addToCart, updateQuantity, removeItem, clearCart } = useCart(addToast);
 
@@ -49,6 +49,7 @@ function App() {
         onUpdate={updateQuantity}
         onRemove={removeItem}
         onClear={clearCart}
+        onCheckoutSuccess={refreshStock}
       />
 
       <Toast toasts={toasts} />

@@ -4,7 +4,7 @@ import CartItem from "./CartItem";
 import OrderSuccess from "./OrderSuccess";
 import { cartApi } from "../services/api";
 
-export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear }) {
+export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear, onCheckoutSuccess }) {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
 
@@ -20,6 +20,9 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
       const newOrderId = generateOrderId();
       setOrderId(newOrderId);
       setOrderPlaced(true);
+      if (onCheckoutSuccess) {
+        onCheckoutSuccess();
+      }
     } catch (error) {
       console.error("Checkout failed:", error);
     }
