@@ -22,7 +22,7 @@ export const productApi = {
     const params = new URLSearchParams();
     if (category && category !== "All") params.append("category", category);
     if (search) params.append("search", search);
-    return get(`/products${params.toString()}`);
+    return get(`/products?${params.toString()}`);
   },
   getById: (id) => get(`/products/${id}`),
   create: (data) => post("/products", data),
