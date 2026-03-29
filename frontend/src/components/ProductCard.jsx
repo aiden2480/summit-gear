@@ -1,6 +1,6 @@
 import "./ProductCard.css";
 
-export default function ProductCard({ product, onAddToCart, onEdit, onDelete }) {
+export default function ProductCard({ product, onAddToCart }) {
   const outOfStock = product.stock <= 0;
 
   return (
@@ -13,7 +13,7 @@ export default function ProductCard({ product, onAddToCart, onEdit, onDelete }) 
           loading="lazy"
         />
         {outOfStock && <div className="product-card__badge product-card__badge--out">Out of Stock</div>}
-        {!outOfStock && product.stock <= 5 && (
+        {!outOfStock && product.stock <= 10 && (
           <div className="product-card__badge product-card__badge--low">Only {product.stock} left</div>
         )}
       </div>

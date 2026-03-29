@@ -12,28 +12,33 @@ async function request(url, options = {}) {
   return res.json();
 }
 
+const get = (url) => request(url);
+const post = (url, data) => request(url, { method: "POST", body: JSON.stringify(data) });
+const put = (url, data) => request(url, { method: "PUT", body: JSON.stringify(data) });
+const del = (url) => request(url, { method: "DELETE" });
+
 export const productApi = {
   getAll: (category, search) => {
     const params = new URLSearchParams();
     if (category && category !== "All") params.append("category", category);
     if (search) params.append("search", search);
-    const qs = params.toString();
-    return request(`/products${qs ? `?${qs}` : ""}`);
+    return get(`/products${params.toString()}`);
   },
-  getById: (id) => request(`/products/${id}`),
-  create: (data) => request("/products", { method: "POST", body: JSON.stringify(data) }),
-  update: (id, data) => request(`/products/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  delete: (id) => request(`/products/${id}`, { method: "DELETE" }),
+  getById: (id) => get(`/products/${id}`),
+  create: (data) => post("/products", data),
+  update: (id, data) => put(`/products/${id}`, data),
+  delete: (id) => del(`/products/${id}`),
 };
 
 export const cartApi = {
-  getAll: () => request("/cart"),
-  add: (productId, quantity = 1) => request("/cart", { method: "POST", body: JSON.stringify({ product_id: productId, quantity }) }),
-  update: (id, quantity) => request(`/cart/${id}`, { method: "PUT", body: JSON.stringify({ quantity }) }),
-  remove: (id) => request(`/cart/${id}`, { method: "DELETE" }),
-  clear: () => request("/cart", { method: "DELETE" }),
+  getAll: () => get("/cart"),
+  add: (productId, quantity = 1) => post("/cart", { product_id: productId, quantity }),
+  update: (id, quantity) => put(`/cart/${id}`, { quantity }),
+  remove: (id) => del(`/cart/${id}`),
+  clear: () => del("/cart"),
+  checkout: () => post("/checkout", {}),
 };
 
 export const categoryApi = {
-  getAll: () => request("/categories"),
+  getAll: () => get("/categories"),
 };

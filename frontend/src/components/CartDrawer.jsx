@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./CartDrawer.css";
 import CartItem from "./CartItem";
 import OrderSuccess from "./OrderSuccess";
+import { cartApi } from "../services/api";
 
 export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear }) {
   const [orderPlaced, setOrderPlaced] = useState(false);
@@ -13,11 +14,15 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
     return `ORD-${timestamp}-${random}`;
   };
 
-  const handleCheckout = () => {
-    const newOrderId = generateOrderId();
-    setOrderId(newOrderId);
-    setOrderPlaced(true);
-    onClear();
+  const handleCheckout = async () => {
+    try {
+      await cartApi.checkout();
+      const newOrderId = generateOrderId();
+      setOrderId(newOrderId);
+      setOrderPlaced(true);
+    } catch (error) {
+      console.error("Checkout failed:", error);
+    }
   };
 
   const handleOrderClose = () => {

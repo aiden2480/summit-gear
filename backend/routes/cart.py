@@ -122,3 +122,26 @@ async def clear_cart(request):
         await session.commit()
 
     return web.json_response({"message": "Cart cleared"})
+
+
+@routes.post("/api/checkout")
+async def checkout(request):
+    async with get_session() as session:
+        # Get all cart items
+        result = await session.execute(select(CartItem).options(joinedload(CartItem.product)))
+        items = result.unique().scalars().all()
+
+        if not items:
+            raise web.HTTPBadRequest(text="Cart is empty")
+
+        # Reduce stock for each item and validate availability
+        for item in items:
+            if item.product.stock < item.quantity:
+                raise web.HTTPBadRequest(text=f"Not enough stock for {item.product.name}")
+            item.product.stock -= item.quantity
+
+        # Clear cart
+        await session.execute(delete(CartItem))
+        await session.commit()
+
+    return web.json_response({"status": "success", "message": "Order placed successfully"})
