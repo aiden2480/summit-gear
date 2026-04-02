@@ -1,5 +1,5 @@
 .product-card {
-  background: #fff;
+  background: #21242e;
   border-radius: 1rem;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -15,7 +15,7 @@
 }
 
 .product-card:focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid #4a9e6e;
   outline-offset: 2px;
 }
 
@@ -23,7 +23,7 @@
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
-  background: #f9fafb;
+  background: #151820;
 }
 
 .product-card__img {
@@ -48,13 +48,13 @@
 }
 
 .product-card__badge--out {
-  background: #fee2e2;
-  color: #dc2626;
+  background: #3b1a1a;
+  color: #d45454;
 }
 
 .product-card__badge--low {
-  background: #fef3c7;
-  color: #d97706;
+  background: #3b3010;
+  color: #f59e0b;
 }
 
 .product-card__body {
@@ -68,7 +68,7 @@
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
-  color: #6366f1;
+  color: #4a9e6e;
   letter-spacing: 0.04em;
   margin-bottom: 0.25rem;
 }
@@ -76,14 +76,14 @@
 .product-card__name {
   font-size: 1rem;
   font-weight: 600;
-  color: #111827;
+  color: #e5e7eb;
   margin: 0 0 0.35rem;
   line-height: 1.3;
 }
 
 .product-card__desc {
   font-size: 0.82rem;
-  color: #6b7280;
+  color: #9ca3af;
   line-height: 1.5;
   margin: 0 0 0.75rem;
   flex: 1;
@@ -104,7 +104,7 @@
 .product-card__price {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #111827;
+  color: #e5e7eb;
 }
 
 .product-card__actions {
@@ -114,7 +114,7 @@
 }
 
 .btn--primary {
-  background: #6366f1;
+  background: #4a9e6e;
   color: white;
   padding: 0.5rem 1rem;
   border: none;
@@ -126,7 +126,7 @@
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: #4f46e5;
+  background: #3d8a5e;
   transform: translateY(-1px);
 }
 
@@ -145,7 +145,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f3f4f6;
+  background: #1e2130;
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -155,11 +155,11 @@
 }
 
 .btn--icon:hover {
-  background: #e5e7eb;
+  background: #2d3140;
 }
 
 .btn--icon-danger:hover {
-  background: #fee2e2;
+  background: #3b1a1a;
 }
 
 @keyframes cardFadeIn {

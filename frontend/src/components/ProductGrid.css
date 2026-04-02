@@ -11,15 +11,15 @@
   justify-content: center;
   gap: 1rem;
   padding: 4rem 1rem;
-  color: #6b7280;
+  color: #9ca3af;
   font-size: 0.95rem;
 }
 
 .spinner {
   width: 2.5rem;
   height: 2.5rem;
-  border: 3px solid #e5e7eb;
-  border-top-color: #6366f1;
+  border: 3px solid #2d3140;
+  border-top-color: #4a9e6e;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -31,10 +31,10 @@
 .product-grid__empty {
   text-align: center;
   padding: 4rem 1rem;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
-.product-grid__empty-icon {
+.product-grid__empty-icon{
   font-size: 3rem;
   display: block;
   margin-bottom: 0.75rem;
@@ -42,7 +42,7 @@
 
 .product-grid__empty h3 {
   margin: 0 0 0.5rem;
-  color: #374151;
+  color: #d1d5db;
   font-size: 1.15rem;
 }
 

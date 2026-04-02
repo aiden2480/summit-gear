@@ -7,10 +7,10 @@ export default function SearchBar({ value, onChange }) {
       <input
         className="search-bar__input"
         type="search"
-        placeholder="Search products..."
+        placeholder="Search gear..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        aria-label="Search products"
+        aria-label="Search gear"
       />
       {value && (
         <button

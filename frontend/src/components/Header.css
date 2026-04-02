@@ -2,9 +2,9 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(24, 26, 32, 0.95);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #2d3140;
   padding: 0 1.5rem;
 }
 
@@ -30,7 +30,7 @@
 .header__title {
   font-size: 1.4rem;
   font-weight: 700;
-  color: #111827;
+  color: #e5e7eb;
   margin: 0;
 }
 
@@ -44,7 +44,7 @@
   position: absolute;
   top: -6px;
   right: -6px;
-  background: #dc2626;
+  background: #d45454;
   color: white;
   font-size: 0.7rem;
   font-weight: 700;
@@ -78,26 +78,26 @@
 }
 
 .btn:focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid #4a9e6e;
   outline-offset: 2px;
 }
 
 .btn--secondary {
-  background: #f3f4f6;
-  color: #374151;
+  background: #1e2130;
+  color: #d1d5db;
 }
 
 .btn--secondary:hover {
-  background: #e5e7eb;
+  background: #2d3140;
 }
 
 .btn--cart {
-  background: #6366f1;
+  background: #4a9e6e;
   color: white;
 }
 
 .btn--cart:hover {
-  background: #4f46e5;
+  background: #3d8a5e;
   transform: translateY(-1px);
 }
 

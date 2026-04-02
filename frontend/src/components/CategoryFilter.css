@@ -6,10 +6,10 @@
 
 .category-filter__btn {
   padding: 0.45rem 1rem;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid #2d3140;
   border-radius: 2rem;
-  background: #fff;
-  color: #6b7280;
+  background: #21242e;
+  color: #9ca3af;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -18,17 +18,17 @@
 }
 
 .category-filter__btn:hover {
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: #4a9e6e;
+  color: #4a9e6e;
 }
 
 .category-filter__btn--active {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: #4a9e6e;
+  border-color: #4a9e6e;
   color: white;
 }
 
 .category-filter__btn:focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid #4a9e6e;
   outline-offset: 2px;
 }

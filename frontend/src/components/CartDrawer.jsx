@@ -60,7 +60,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
         <div className="cart-drawer__body">
           {cartItems.length === 0 ? (
             <div className="cart-drawer__empty">
-              <span aria-hidden="true">🛒</span>
+              <span aria-hidden="true">🎒</span>
               <p>Your cart is empty</p>
               <button className="btn btn--primary" onClick={onClose}>
                 Continue Shopping
