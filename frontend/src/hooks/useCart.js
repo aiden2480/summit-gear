@@ -52,7 +52,6 @@ export default function useCart(addToast) {
     try {
       await cartApi.remove(itemId);
       await fetchCart();
-      addToast("Removed from cart");
     } catch (err) {
       addToast(err.message || "Failed to remove item", "error");
     }
