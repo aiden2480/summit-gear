@@ -1,7 +1,7 @@
 import os
-from sqlalchemy import select
+from sqlmodel import SQLModel, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from database.models import Base, Product
+from database.models import Product, CartItem
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "shop.db")
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
@@ -13,9 +13,8 @@ async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit
 async def init_db(*_):
     """Initialize database and seed with data"""
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    
-    # Seed data if no products exist
+        await conn.run_sync(SQLModel.metadata.create_all)
+
     async with async_session() as session:
         result = await session.execute(select(Product))
         if not result.scalars().first():

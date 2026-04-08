@@ -1,5 +1,5 @@
 aiohttp==3.9.5
 aiosqlite==0.20.0
 aiohttp-cors==0.7.0
-sqlalchemy==2.0.48
+sqlmodel==0.0.37
 alembic==1.13.1

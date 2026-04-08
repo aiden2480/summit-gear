@@ -1,21 +1,18 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
-
-Base = declarative_base()
+from typing import List
+from sqlmodel import SQLModel, Field, Relationship
 
 
-class Product(Base):
+class Product(SQLModel, table=True):
     __tablename__ = "products"
 
-    id          = Column(Integer, primary_key=True)
-    name        = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    price       = Column(Float, nullable=False)
-    image_url   = Column(String, nullable=False)
-    category    = Column(String, nullable=False)
-    stock       = Column(Integer, nullable=False, default=0)
-    cart_items  = relationship("CartItem", back_populates="product", cascade="all, delete-orphan")
+    id: int = Field(default=None, primary_key=True)
+    name: str
+    description: str
+    price: float
+    image_url: str
+    category: str
+    stock: int = 0
+    cart_items: List["CartItem"] = Relationship(back_populates="product", cascade_delete=True)
 
     def to_dict(self):
         return {
@@ -29,13 +26,13 @@ class Product(Base):
         }
 
 
-class CartItem(Base):
+class CartItem(SQLModel, table=True):
     __tablename__ = "cart_items"
 
-    id         = Column(Integer, primary_key=True)
-    product_id = Column(Integer, ForeignKey("products.id"), nullable=False)
-    quantity   = Column(Integer, nullable=False, default=1)
-    product    = relationship("Product", back_populates="cart_items")
+    id: int = Field(default=None, primary_key=True)
+    product_id: int = Field(foreign_key="products.id")
+    quantity: int = 1
+    product: Product = Relationship(back_populates="cart_items")
 
     def to_dict(self):
         return {

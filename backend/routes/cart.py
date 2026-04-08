@@ -1,5 +1,5 @@
 from aiohttp import web
-from sqlalchemy import select, delete
+from sqlmodel import select, delete
 from sqlalchemy.orm import joinedload
 from database import get_session
 from database.models import CartItem, Product
