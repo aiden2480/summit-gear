@@ -15,7 +15,7 @@ function App() {
   const { toasts, addToast } = useToast();
   const {
     products, categories, selectedCategory, setSelectedCategory,
-    searchQuery, setSearchQuery, loading, refreshStock,
+    searchQuery, setSearchQuery, loading, error, refreshStock,
   } = useProducts(addToast);
   const { cartItems, cartCount, cartTotal, addToCart, updateQuantity, removeItem, clearCart, fetchCart } = useCart(addToast);
 
@@ -25,6 +25,7 @@ function App() {
     await addToCart(productId);
   }, [addToCart]);
 
+  // After checkout, re-fetch cart (now empty) and refresh product stock counts
   const handleCheckoutSuccess = async () => {
     await fetchCart();
     refreshStock();
@@ -42,6 +43,7 @@ function App() {
         <ProductGrid
           products={products}
           loading={loading}
+          error={error}
           onAddToCart={handleAddToCart}
         />
       </main>
@@ -55,6 +57,7 @@ function App() {
         onRemove={removeItem}
         onClear={clearCart}
         onCheckoutSuccess={handleCheckoutSuccess}
+        addToast={addToast}
       />
 
       <Toast toasts={toasts} />

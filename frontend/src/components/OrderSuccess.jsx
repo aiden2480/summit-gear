@@ -7,7 +7,7 @@ export default function OrderSuccess({ orderId, onClose }) {
       <div className="order-modal" role="dialog" aria-modal="true" aria-label="Order successful">
         <div className="order-modal__content">
           <div className="order-modal__truck">
-            <img src="/pickup_truck.svg" alt="" />
+            <img src="/pickup_truck.svg" alt="Delivery truck animation" aria-hidden="true" />
           </div>
 
           <h1 className="order-modal__title">Order Confirmed!</h1>

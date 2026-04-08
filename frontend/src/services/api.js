@@ -1,5 +1,7 @@
 const API_BASE = "http://localhost:8080/api";
 
+// Centralised API client — all fetch calls go through request() which handles
+// JSON headers, error extraction, and throws on non-2xx responses.
 async function request(url, options = {}) {
   const res = await fetch(`${API_BASE}${url}`, {
     headers: { "Content-Type": "application/json" },
@@ -12,6 +14,7 @@ async function request(url, options = {}) {
   return res.json();
 }
 
+// CRUD operations expressed as HTTP request methods
 const get = (url) => request(url);
 const post = (url, data) => request(url, { method: "POST", body: JSON.stringify(data) });
 const put = (url, data) => request(url, { method: "PUT", body: JSON.stringify(data) });

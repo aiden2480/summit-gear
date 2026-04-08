@@ -126,6 +126,8 @@ async def clear_cart(request):
 
 @routes.post("/api/checkout")
 async def checkout(request):
+    """Atomically validates stock, reduces quantities, and clears the cart."""
+
     async with get_session() as session:
         # Get all cart items
         result = await session.execute(select(CartItem).options(joinedload(CartItem.product)))

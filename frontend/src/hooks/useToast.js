@@ -1,5 +1,7 @@
 import { useState, useCallback } from "react";
 
+// Manages a stack of toast notifications that auto-dismiss after 3 seconds.
+// Each toast gets a unique ID so concurrent toasts can be removed independently.
 export default function useToast() {
   const [toasts, setToasts] = useState([]);
 

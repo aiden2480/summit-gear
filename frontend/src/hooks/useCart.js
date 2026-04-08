@@ -23,9 +23,17 @@ export default function useCart(addToast) {
 
   const addToCart = async (productId) => {
     try {
+      // Check if product is already in cart for contextual feedback
+      const alreadyInCart = cartItems.some((item) => item.product_id === productId);
       await cartApi.add(productId, 1);
       await fetchCart();
-      addToast("Added to cart!");
+      if (alreadyInCart) {
+        const updated = cartItems.find((item) => item.product_id === productId);
+        const quantity = (updated?.quantity || 0) + 1;
+        addToast(`Updated quantity in cart to ${quantity}`);
+      } else {
+        addToast("Added to cart!");
+      }
     } catch (err) {
       addToast(err.message || "Failed to add to cart", "error");
     }

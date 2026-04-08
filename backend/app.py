@@ -12,6 +12,8 @@ def create_app() -> web.Application:
     app.router.add_routes(product_routes)
     app.router.add_routes(cart_routes)
 
+    # Enable CORS so the frontend (localhost:5173) can make requests to the
+    # backend (localhost:8080). Without this, browsers block cross-origin fetches.
     cors = aiohttp_cors.setup(app, defaults={
         "*": aiohttp_cors.ResourceOptions(
             allow_credentials=True,

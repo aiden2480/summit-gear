@@ -1,12 +1,24 @@
 import ProductCard from "./ProductCard";
 import "./ProductGrid.css";
 
-export default function ProductGrid({ products, loading, onAddToCart }) {
+export default function ProductGrid({ products, loading, error, onAddToCart }) {
   if (loading) {
     return (
       <div className="product-grid__loading" role="status">
         <div className="spinner" aria-hidden="true"></div>
         <span>Loading products...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="product-grid__empty" role="alert">
+        <span className="product-grid__empty-icon" aria-hidden="true">
+          <img src="/package.svg" alt="" className="product-grid__empty-img" />
+        </span>
+        <h3>Connection Error</h3>
+        <p>{error}</p>
       </div>
     );
   }

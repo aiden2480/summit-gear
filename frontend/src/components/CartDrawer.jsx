@@ -1,12 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./CartDrawer.css";
 import CartItem from "./CartItem";
 import OrderSuccess from "./OrderSuccess";
 import { cartApi } from "../services/api";
 
-export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear, onCheckoutSuccess }) {
+export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear, onCheckoutSuccess, addToast }) {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
+
+  // Close drawer on Escape key press
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        if (orderPlaced) {
+          handleOrderClose();
+        } else if (open) {
+          onClose();
+        }
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, orderPlaced, onClose]);
 
   const generateOrderId = () => {
     const timestamp = Date.now().toString(36).toUpperCase();
@@ -24,7 +39,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
         onCheckoutSuccess();
       }
     } catch (error) {
-      console.error("Checkout failed:", error);
+      addToast(error.message || "Checkout failed. Please try again.", "error");
     }
   };
 
