@@ -32,7 +32,7 @@ export default function CartItem({ item, onUpdate, onRemove }) {
         onClick={() => onRemove(item.id)}
         aria-label={`Remove ${item.name} from cart`}
       >
-        ✕
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
       </button>
     </li>
   );

@@ -14,7 +14,9 @@ export default function ProductGrid({ products, loading, onAddToCart }) {
   if (products.length === 0) {
     return (
       <div className="product-grid__empty">
-        <span className="product-grid__empty-icon" aria-hidden="true">📦</span>
+        <span className="product-grid__empty-icon" aria-hidden="true">
+          <img src="/package.svg" alt="" className="product-grid__empty-img" />
+        </span>
         <h3>No products found</h3>
         <p>Try adjusting your search or filter criteria.</p>
       </div>

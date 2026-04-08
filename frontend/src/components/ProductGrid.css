@@ -34,10 +34,16 @@
   color: #9ca3af;
 }
 
-.product-grid__empty-icon{
+.product-grid__empty-icon {
   font-size: 3rem;
-  display: block;
+  display: flex;
+  justify-content: center;
   margin-bottom: 0.75rem;
+}
+
+.product-grid__empty-img {
+  width: 12rem;
+  height: 12rem;
 }
 
 .product-grid__empty h3 {

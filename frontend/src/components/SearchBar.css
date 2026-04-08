@@ -11,6 +11,13 @@
   transform: translateY(-50%);
   font-size: 0.95rem;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+}
+
+.search-bar__icon-img {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .search-bar__input {

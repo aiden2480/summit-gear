@@ -50,7 +50,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
         <div className="cart-drawer__header">
           <h2 className="cart-drawer__title">Your Cart</h2>
           <button className="cart-drawer__close" onClick={onClose} aria-label="Close cart">
-            ✕
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
           </button>
         </div>
 
