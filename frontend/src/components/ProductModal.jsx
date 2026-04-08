@@ -74,7 +74,7 @@ export default function ProductModal({ open, product, onClose, onSave }) {
       <div className="modal" role="dialog" aria-modal="true" aria-label={isEdit ? "Edit product" : "Add product"}>
         <div className="modal__header">
           <h2 className="modal__title">{isEdit ? "Edit Product" : "Add New Product"}</h2>
-          <button className="modal__close" onClick={onClose} aria-label="Close dialog"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg></button>
+          <button className="btn--close" onClick={onClose} aria-label="Close dialog"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg></button>
         </div>
         <form className="modal__form" onSubmit={handleSubmit} noValidate>
           {errors.form && <p className="modal__error">{errors.form}</p>}

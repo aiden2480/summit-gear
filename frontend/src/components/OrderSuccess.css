@@ -96,15 +96,6 @@
   font-size: 1rem;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes slideUp {
   from {
     transform: translate(-50%, -30%);

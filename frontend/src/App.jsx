@@ -8,6 +8,7 @@ import Toast from "./components/Toast";
 import useToast from "./hooks/useToast";
 import useProducts from "./hooks/useProducts";
 import useCart from "./hooks/useCart";
+import "./shared.css";
 import "./App.css";
 
 function App() {
