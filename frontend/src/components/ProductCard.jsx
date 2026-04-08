@@ -4,7 +4,7 @@ export default function ProductCard({ product, onAddToCart }) {
   const outOfStock = product.stock <= 0;
 
   return (
-    <article className="product-card" tabIndex={0}>
+    <article className={`product-card${outOfStock ? ' product-card--out-of-stock' : ''}`} tabIndex={0}>
       <div className="product-card__img-wrapper">
         <img
           className="product-card__img"

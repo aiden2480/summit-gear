@@ -16,7 +16,7 @@ function App() {
     products, categories, selectedCategory, setSelectedCategory,
     searchQuery, setSearchQuery, loading, refreshStock,
   } = useProducts(addToast);
-  const { cartItems, cartCount, cartTotal, addToCart, updateQuantity, removeItem, clearCart } = useCart(addToast);
+  const { cartItems, cartCount, cartTotal, addToCart, updateQuantity, removeItem, clearCart, fetchCart } = useCart(addToast);
 
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -24,6 +24,11 @@ function App() {
     await addToCart(productId);
     setCartOpen(true);
   }, [addToCart]);
+
+  const handleCheckoutSuccess = async () => {
+    await fetchCart();
+    refreshStock();
+  };
 
   return (
     <div className="app">
@@ -49,7 +54,7 @@ function App() {
         onUpdate={updateQuantity}
         onRemove={removeItem}
         onClear={clearCart}
-        onCheckoutSuccess={refreshStock}
+        onCheckoutSuccess={handleCheckoutSuccess}
       />
 
       <Toast toasts={toasts} />

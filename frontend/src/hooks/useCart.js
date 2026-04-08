@@ -63,5 +63,5 @@ export default function useCart(addToast) {
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  return { cartItems, cartCount, cartTotal, loading, addToCart, updateQuantity, removeItem, clearCart };
+  return { cartItems, cartCount, cartTotal, loading, addToCart, updateQuantity, removeItem, clearCart, fetchCart };
 }
