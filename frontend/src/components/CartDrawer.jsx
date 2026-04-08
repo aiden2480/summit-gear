@@ -37,18 +37,15 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
     return <OrderSuccess orderId={orderId} onClose={handleOrderClose} />;
   }
 
-  if (!open) {
-    return null;
-  }
-
   return (
     <>
-      <div className="cart-overlay cart-overlay--visible" onClick={onClose} aria-hidden="true" />
+      <div className={`cart-overlay${open ? ' cart-overlay--visible' : ''}`} onClick={onClose} aria-hidden="true" />
       <aside
-        className="cart-drawer cart-drawer--open"
+        className={`cart-drawer${open ? ' cart-drawer--open' : ''}`}
         role="dialog"
         aria-label="Shopping cart"
-        aria-modal="true"
+        aria-modal={open}
+        aria-hidden={!open}
       >
         <div className="cart-drawer__header">
           <h2 className="cart-drawer__title">Your Cart</h2>

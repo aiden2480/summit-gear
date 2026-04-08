@@ -22,7 +22,6 @@ function App() {
 
   const handleAddToCart = useCallback(async (productId) => {
     await addToCart(productId);
-    setCartOpen(true);
   }, [addToCart]);
 
   const handleCheckoutSuccess = async () => {
