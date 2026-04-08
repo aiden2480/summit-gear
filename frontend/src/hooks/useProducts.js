@@ -54,7 +54,6 @@ export default function useProducts(addToast) {
     searchQuery,
     setSearchQuery,
     loading,
-    fetchProducts,
     refreshStock,
   };
 }

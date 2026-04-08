@@ -24,8 +24,6 @@ export const productApi = {
     if (search) params.append("search", search);
     return get(`/products?${params.toString()}`);
   },
-  getById: (id) => get(`/products/${id}`),
-  create: (data) => post("/products", data),
 };
 
 export const cartApi = {

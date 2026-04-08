@@ -61,29 +61,6 @@
   color: var(--color-danger);
 }
 
-.btn--icon {
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-surface-alt);
-  border: none;
-  border-radius: 0.5rem;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s ease;
-  padding: 0;
-}
-
-.btn--icon:hover {
-  background: var(--color-surface-hover);
-}
-
-.btn--icon-danger:hover {
-  background: var(--color-danger-bg);
-}
-
 /* Close button — used by cart drawer, product modal */
 .btn--close {
   width: 2rem;

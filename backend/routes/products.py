@@ -1,5 +1,5 @@
 from aiohttp import web
-from sqlmodel import select, delete
+from sqlmodel import select
 from database import get_session
 from database.models import Product, CartItem
 
@@ -28,50 +28,6 @@ async def get_products(request):
         products = result.scalars().all()
 
     return web.json_response([p.to_dict() for p in products])
-
-
-@routes.get("/api/products/{id}")
-async def get_product(request):
-    product_id = int(request.match_info["id"])
-    async with get_session() as session:
-        result = await session.execute(select(Product).where(Product.id == product_id))
-        product = result.scalar()
-    
-    if not product:
-        raise web.HTTPNotFound(text="Product not found")
-    return web.json_response(product.to_dict())
-
-
-@routes.post("/api/products")
-async def create_product(request):
-    data = await request.json()
-    required = ["name", "description", "price", "image_url", "category", "stock"]
-    for field in required:
-        if field not in data:
-            raise web.HTTPBadRequest(text=f"Missing field: {field}")
-
-    if not data["name"].strip():
-        raise web.HTTPBadRequest(text="Product name cannot be empty")
-    if data["price"] <= 0:
-        raise web.HTTPBadRequest(text="Price must be greater than 0")
-    if data["stock"] < 0:
-        raise web.HTTPBadRequest(text="Stock cannot be negative")
-
-    product = Product(
-        name=data["name"],
-        description=data["description"],
-        price=float(data["price"]),
-        image_url=data["image_url"],
-        category=data["category"],
-        stock=int(data["stock"]),
-    )
-
-    async with get_session() as session:
-        session.add(product)
-        await session.commit()
-        await session.refresh(product)
-
-    return web.json_response(product.to_dict(), status=201)
 
 
 @routes.get("/api/categories")
