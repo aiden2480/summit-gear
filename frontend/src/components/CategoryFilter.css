@@ -6,10 +6,10 @@
 
 .category-filter__btn {
   padding: 0.45rem 1rem;
-  border: 1.5px solid #2d3140;
+  border: 1.5px solid var(--color-border);
   border-radius: 2rem;
-  background: #21242e;
-  color: #9ca3af;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
@@ -18,21 +18,21 @@
 }
 
 .category-filter__btn:hover {
-  border-color: #4a9e6e;
-  color: #4a9e6e;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .category-filter__btn--active {
-  background: #4a9e6e;
-  border-color: #4a9e6e;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: white;
 }
 
 .category-filter__btn--active:hover {
-  color: #181a20;
+  color: var(--color-bg);
 }
 
 .category-filter__btn:focus-visible {
-  outline: 2px solid #4a9e6e;
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }

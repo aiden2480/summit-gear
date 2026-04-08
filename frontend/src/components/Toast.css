@@ -23,11 +23,11 @@
 }
 
 .toast--success {
-  background: #4a9e6e;
+  background: var(--color-primary);
 }
 
 .toast--error {
-  background: #d45454;
+  background: var(--color-danger);
 }
 
 .toast__icon {
