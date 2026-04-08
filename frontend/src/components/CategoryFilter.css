@@ -28,6 +28,10 @@
   color: white;
 }
 
+.category-filter__btn--active:hover {
+  color: #181a20;
+}
+
 .category-filter__btn:focus-visible {
   outline: 2px solid #4a9e6e;
   outline-offset: 2px;
