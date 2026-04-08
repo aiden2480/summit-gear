@@ -74,7 +74,7 @@ async def seed_data(session: AsyncSession):
         },
         {
             "name": "Static Rope 30m",
-            "description": "10.5mm static rope for rappelling, hauling, and fixed lines. High abrasion resistance.",
+            "description": "10.5mm static rope for abseiling, hauling, and fixed lines. High abrasion resistance.",
             "price": 89.99,
             "image_url": "https://www.climbinganchors.com.au/assets/full/EDL8325.webp?20250703111348",
             "category": "Ropes & Slings",
@@ -130,7 +130,7 @@ async def seed_data(session: AsyncSession):
         },
         {
             "name": "Tubular Belay Device",
-            "description": "Classic ATC-style tubular belay and rappel device. Works with ropes 8.5-11mm.",
+            "description": "Classic ATC-style tubular belay and abseil device. Works with ropes 8.5-11mm.",
             "price": 19.99,
             "image_url": "https://www.climbinganchors.com.au/assets/full/BDATCXPS16.webp?20251204151429",
             "category": "Hardware",
@@ -146,7 +146,7 @@ async def seed_data(session: AsyncSession):
         },
         {
             "name": "Figure 8 Descender",
-            "description": "Classic figure-8 rappel device machined from aircraft aluminium. 40kN rated.",
+            "description": "Classic figure-8 abseil device machined from aircraft aluminium. 40kN rated.",
             "price": 16.99,
             "image_url": "https://www.climbinganchors.com.au/assets/full/CAMP092801.jpg?20221202154635",
             "category": "Hardware",
@@ -274,7 +274,7 @@ async def seed_data(session: AsyncSession):
         },
         {
             "name": "Belay Gloves",
-            "description": "Full-grain leather gloves for belaying and rappelling. Reinforced palm for heat resistance.",
+            "description": "Full-grain leather gloves for belaying and abseiling. Reinforced palm for heat resistance.",
             "price": 29.99,
             "image_url": "https://www.climbinganchors.com.au/assets/full/MT-BELAY.jpg?20221202154635",
             "category": "Apparel",
