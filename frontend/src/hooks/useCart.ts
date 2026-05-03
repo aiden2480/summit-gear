@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { cartApi } from "../services/api";
+import type { CartItem, ToastType } from "../types";
 
-export default function useCart(addToast) {
-  const [cartItems, setCartItems] = useState([]);
+type AddToast = (message: string, type?: ToastType) => void;
+
+export default function useCart(addToast: AddToast) {
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchCart = useCallback(async () => {
@@ -18,49 +21,47 @@ export default function useCart(addToast) {
   }, [addToast]);
 
   useEffect(() => {
-    fetchCart();
+    void fetchCart();
   }, [fetchCart]);
 
-  const addToCart = async (productId) => {
+  const addToCart = async (productId: number) => {
     try {
-      // Check if product is already in cart for contextual feedback
-      const alreadyInCart = cartItems.some((item) => item.product_id === productId);
+      const existingItem = cartItems.find((item) => item.product_id === productId);
       await cartApi.add(productId, 1);
       await fetchCart();
-      if (alreadyInCart) {
-        const updated = cartItems.find((item) => item.product_id === productId);
-        const quantity = (updated?.quantity || 0) + 1;
-        addToast(`Updated quantity in cart to ${quantity}`);
+
+      if (existingItem) {
+        addToast(`Updated quantity in cart to ${existingItem.quantity + 1}`);
       } else {
         addToast("Added to cart!");
       }
-    } catch (err) {
-      addToast(err.message || "Failed to add to cart", "error");
+    } catch (error: unknown) {
+      addToast(error instanceof Error ? error.message : "Failed to add to cart", "error");
     }
   };
 
-  const updateQuantity = async (itemId, quantity) => {
+  const updateQuantity = async (itemId: number, quantity: number) => {
     try {
       await cartApi.update(itemId, quantity);
       await fetchCart();
-    } catch (err) {
-      addToast(err.message || "Failed to update quantity", "error");
+    } catch (error: unknown) {
+      addToast(error instanceof Error ? error.message : "Failed to update quantity", "error");
     }
   };
 
-  const removeItem = async (itemId) => {
+  const removeItem = async (itemId: number) => {
     try {
       await cartApi.remove(itemId);
       await fetchCart();
-    } catch (err) {
-      addToast(err.message || "Failed to remove item", "error");
+    } catch (error: unknown) {
+      addToast(error instanceof Error ? error.message : "Failed to remove item", "error");
     }
   };
 
   const clearCart = async () => {
     try {
       await cartApi.clear();
-      setCartItems([]);
+      await fetchCart();
       addToast("Cart cleared");
     } catch {
       addToast("Failed to clear cart", "error");

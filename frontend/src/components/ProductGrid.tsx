@@ -1,7 +1,15 @@
 import ProductCard from "./ProductCard";
 import "./ProductGrid.css";
+import type { Product } from "../types";
 
-export default function ProductGrid({ products, loading, error, onAddToCart }) {
+interface ProductGridProps {
+  products: Product[];
+  loading: boolean;
+  error: string | null;
+  onAddToCart: (productId: number) => void | Promise<void>;
+}
+
+export default function ProductGrid({ products, loading, error, onAddToCart }: ProductGridProps) {
   if (loading) {
     return (
       <div className="product-grid__loading" role="status">
@@ -37,12 +45,9 @@ export default function ProductGrid({ products, loading, error, onAddToCart }) {
 
   return (
     <div className="product-grid" role="list">
-      {products.map((product, i) => (
-        <div key={product.id} role="listitem" style={{ animationDelay: `${i * 0.05}s` }}>
-          <ProductCard
-            product={product}
-            onAddToCart={onAddToCart}
-          />
+      {products.map((product, index) => (
+        <div key={product.id} role="listitem" style={{ animationDelay: `${index * 0.05}s` }}>
+          <ProductCard product={product} onAddToCart={onAddToCart} />
         </div>
       ))}
     </div>

@@ -1,6 +1,11 @@
 import "./Toast.css";
+import type { ToastMessage } from "../types";
 
-export default function Toast({ toasts }) {
+interface ToastProps {
+  toasts: ToastMessage[];
+}
+
+export default function Toast({ toasts }: ToastProps) {
   return (
     <div className="toast-container" role="status" aria-live="polite">
       {toasts.map((toast) => (

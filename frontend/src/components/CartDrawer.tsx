@@ -1,17 +1,38 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "./CartDrawer.css";
 import CartItem from "./CartItem";
 import OrderSuccess from "./OrderSuccess";
 import { cartApi } from "../services/api";
+import type { CartItem as CartItemType, ToastType } from "../types";
 
-export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear, onCheckoutSuccess, addToast }) {
+interface CartDrawerProps {
+  open: boolean;
+  cartItems: CartItemType[];
+  cartTotal: number;
+  onClose: () => void;
+  onUpdate: (itemId: number, quantity: number) => void | Promise<void>;
+  onRemove: (itemId: number) => void | Promise<void>;
+  onClear: () => void | Promise<void>;
+  onCheckoutSuccess?: () => void | Promise<void>;
+  addToast: (message: string, type?: ToastType) => void;
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Checkout failed. Please try again.";
+}
+
+export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear, onCheckoutSuccess, addToast }: CartDrawerProps) {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
 
-  // Close drawer on Escape key press
+  const handleOrderClose = useCallback(() => {
+    setOrderPlaced(false);
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         if (orderPlaced) {
           handleOrderClose();
         } else if (open) {
@@ -19,9 +40,10 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
         }
       }
     };
+
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [open, orderPlaced, onClose]);
+  }, [open, orderPlaced, onClose, handleOrderClose]);
 
   const generateOrderId = () => {
     const timestamp = Date.now().toString(36).toUpperCase();
@@ -35,17 +57,13 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
       const newOrderId = generateOrderId();
       setOrderId(newOrderId);
       setOrderPlaced(true);
-      if (onCheckoutSuccess) {
-        onCheckoutSuccess();
-      }
-    } catch (error) {
-      addToast(error.message || "Checkout failed. Please try again.", "error");
-    }
-  };
 
-  const handleOrderClose = () => {
-    setOrderPlaced(false);
-    onClose();
+      if (onCheckoutSuccess) {
+        await onCheckoutSuccess();
+      }
+    } catch (error: unknown) {
+      addToast(getErrorMessage(error), "error");
+    }
   };
 
   if (orderPlaced) {
@@ -54,9 +72,9 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
 
   return (
     <>
-      <div className={`cart-overlay${open ? ' cart-overlay--visible' : ''}`} onClick={onClose} aria-hidden="true" />
+      <div className={`cart-overlay${open ? " cart-overlay--visible" : ""}`} onClick={onClose} aria-hidden="true" />
       <aside
-        className={`cart-drawer${open ? ' cart-drawer--open' : ''}`}
+        className={`cart-drawer${open ? " cart-drawer--open" : ""}`}
         role="dialog"
         aria-label="Shopping cart"
         aria-modal={open}
@@ -81,12 +99,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
           ) : (
             <ul className="cart-drawer__list">
               {cartItems.map((item) => (
-                <CartItem
-                  key={item.id}
-                  item={item}
-                  onUpdate={onUpdate}
-                  onRemove={onRemove}
-                />
+                <CartItem key={item.id} item={item} onUpdate={onUpdate} onRemove={onRemove} />
               ))}
             </ul>
           )}
@@ -98,14 +111,14 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
               <span>Total</span>
               <span className="cart-drawer__total-price">${cartTotal.toFixed(2)}</span>
             </div>
-            <button 
+            <button
               type="button"
-              className="btn btn--primary cart-drawer__checkout" 
-              onClick={handleCheckout}
+              className="btn btn--primary cart-drawer__checkout"
+              onClick={() => void handleCheckout()}
             >
               Checkout
             </button>
-            <button className="btn btn--text" onClick={onClear}>
+            <button className="btn btn--text" onClick={() => void onClear()}>
               Clear Cart
             </button>
           </div>

@@ -1,6 +1,11 @@
 import "./Header.css";
 
-export default function Header({ cartCount, onCartClick }) {
+interface HeaderProps {
+  cartCount: number;
+  onCartClick: () => void;
+}
+
+export default function Header({ cartCount, onCartClick }: HeaderProps) {
   return (
     <header className="header">
       <div className="header__inner">

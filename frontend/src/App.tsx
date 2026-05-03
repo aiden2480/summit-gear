@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
 import CategoryFilter from "./components/CategoryFilter";
@@ -14,21 +14,27 @@ import "./App.css";
 function App() {
   const { toasts, addToast } = useToast();
   const {
-    products, categories, selectedCategory, setSelectedCategory,
-    searchQuery, setSearchQuery, loading, error, refreshStock,
+    products,
+    categories,
+    selectedCategory,
+    setSelectedCategory,
+    searchQuery,
+    setSearchQuery,
+    loading,
+    error,
+    refreshStock,
   } = useProducts(addToast);
   const { cartItems, cartCount, cartTotal, addToCart, updateQuantity, removeItem, clearCart, fetchCart } = useCart(addToast);
 
   const [cartOpen, setCartOpen] = useState(false);
 
-  const handleAddToCart = useCallback(async (productId) => {
+  const handleAddToCart = useCallback(async (productId: number) => {
     await addToCart(productId);
   }, [addToCart]);
 
-  // After checkout, re-fetch cart (now empty) and refresh product stock counts
   const handleCheckoutSuccess = async () => {
     await fetchCart();
-    refreshStock();
+    await refreshStock();
   };
 
   return (
