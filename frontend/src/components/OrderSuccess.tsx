@@ -1,6 +1,11 @@
 import "./OrderSuccess.css";
 
-export default function OrderSuccess({ orderId, onClose }) {
+interface OrderSuccessProps {
+  orderId: string;
+  onClose: () => void;
+}
+
+export default function OrderSuccess({ orderId, onClose }: OrderSuccessProps) {
   return (
     <>
       <div className="order-overlay" onClick={onClose} aria-hidden="true" />

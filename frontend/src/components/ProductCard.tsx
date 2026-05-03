@@ -1,10 +1,16 @@
 import "./ProductCard.css";
+import type { Product } from "../types";
 
-export default function ProductCard({ product, onAddToCart }) {
+interface ProductCardProps {
+  product: Product;
+  onAddToCart: (productId: number) => void | Promise<void>;
+}
+
+export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const outOfStock = product.stock <= 0;
 
   return (
-    <article className={`product-card${outOfStock ? ' product-card--out-of-stock' : ''}`} tabIndex={0}>
+    <article className={`product-card${outOfStock ? " product-card--out-of-stock" : ""}`} tabIndex={0}>
       <div className="product-card__img-wrapper">
         <img
           className="product-card__img"
@@ -26,7 +32,7 @@ export default function ProductCard({ product, onAddToCart }) {
           <div className="product-card__actions">
             <button
               className="btn btn--primary"
-              onClick={() => onAddToCart(product.id)}
+              onClick={() => void onAddToCart(product.id)}
               disabled={outOfStock}
               aria-label={`Add ${product.name} to cart`}
             >
