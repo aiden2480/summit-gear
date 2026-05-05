@@ -1,7 +1,10 @@
 import os
+from passlib.context import CryptContext
 from sqlmodel import SQLModel, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from database.models import Product, CartItem
+from database.models import Product, CartItem, User
+
+_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "shop.db")
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
@@ -19,6 +22,9 @@ async def init_db(*_):
         result = await session.execute(select(Product))
         if not result.scalars().first():
             await seed_data(session)
+
+    async with async_session() as session:
+        await seed_users(session)
 
 
 async def seed_data(session: AsyncSession):
@@ -302,6 +308,23 @@ async def seed_data(session: AsyncSession):
         product = Product(**data)
         session.add(product)
     
+    await session.commit()
+
+
+async def seed_users(session: AsyncSession):
+    """Seed pre-populated admin and test user accounts if they don't exist."""
+    default_users = [
+        {"username": "admin@example.com", "password": "admin", "role": "admin"},
+        {"username": "user@example.com", "password": "user", "role": "user"},
+    ]
+    for u in default_users:
+        result = await session.execute(select(User).where(User.username == u["username"]))
+        if not result.scalars().first():
+            session.add(User(
+                username=u["username"],
+                hashed_password=_pwd_context.hash(u["password"]),
+                role=u["role"],
+            ))
     await session.commit()
 
 
