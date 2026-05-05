@@ -1,8 +1,8 @@
 import os
 import jwt
+import bcrypt
 from aiohttp import web
 from datetime import datetime, timedelta, timezone
-from passlib.context import CryptContext
 from sqlmodel import select
 from database import get_session
 from database.models import User
@@ -10,11 +10,17 @@ from database.models import User
 
 routes = web.RouteTableDef()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "summit-gear-secret-key-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8")
+
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 
 def create_access_token(username: str, role: str) -> str:
@@ -62,7 +68,7 @@ async def login(request: web.Request) -> web.Response:
         result = await session.execute(select(User).where(User.username == username))
         user = result.scalars().first()
 
-    if not user or not pwd_context.verify(password, user.hashed_password):
+    if not user or not verify_password(password, user.hashed_password):
         return web.json_response({"error": "Invalid credentials"}, status=401)
 
     token = create_access_token(user.username, user.role)
@@ -83,7 +89,7 @@ async def register(request: web.Request) -> web.Response:
         if result.scalars().first():
             return web.json_response({"error": "Username already exists"}, status=409)
 
-        new_user = User(username=username, hashed_password=pwd_context.hash(password), role="user")
+        new_user = User(username=username, hashed_password=hash_password(password), role="user")
         session.add(new_user)
         await session.commit()
 

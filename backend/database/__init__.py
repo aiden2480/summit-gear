@@ -1,10 +1,8 @@
 import os
-from passlib.context import CryptContext
+import bcrypt
 from sqlmodel import SQLModel, select
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from database.models import Product, CartItem, User
-
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "shop.db")
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
@@ -322,7 +320,7 @@ async def seed_users(session: AsyncSession):
         if not result.scalars().first():
             session.add(User(
                 username=u["username"],
-                hashed_password=_pwd_context.hash(u["password"]),
+                hashed_password=bcrypt.hashpw(u["password"].encode("utf-8"), bcrypt.gensalt(rounds=12)).decode("utf-8"),
                 role=u["role"],
             ))
     await session.commit()
