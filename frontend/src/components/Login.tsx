@@ -46,7 +46,7 @@ const Login = ({ onLogin, onSwitch }: LoginProps) => {
     <div className="login-container">
       <div className="login-card">
         <h2>Welcome Back</h2>
-        <p>Manage your tasks efficiently</p>
+        <p>Your adventure starts here</p>
 
         <form onSubmit={handleLogin}>
           <div className="input-group">
