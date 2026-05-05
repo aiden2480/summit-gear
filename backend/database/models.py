@@ -1,5 +1,14 @@
-from typing import List
+from typing import List, Optional
 from sqlmodel import SQLModel, Field, Relationship
+
+
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(unique=True, index=True)
+    hashed_password: str
+    role: str = Field(default="user")  # "user" or "admin"
 
 
 class Product(SQLModel, table=True):
