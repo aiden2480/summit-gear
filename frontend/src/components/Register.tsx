@@ -1,0 +1,92 @@
+import { useState } from 'react';
+import './Login.css';
+
+const API_BASE_URL = 'http://localhost:8080';
+
+interface RegisterProps {
+  onLogin: (user: string, token: string) => void;
+  onSwitch: () => void;
+}
+
+const Register = ({ onLogin, onSwitch }: RegisterProps) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (email.trim() && password.trim()) {
+      try {
+        const response = await fetch(API_BASE_URL + '/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: email,
+            password: password,
+          }),
+        });
+        if (response.ok) {
+          const data = await response.json();
+          localStorage.setItem('user', data.user);
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('role', data.role);
+          onLogin(data.user, data.token);
+        } else {
+          const err = await response.json();
+          alert(err.error || 'Registration failed. Please try again.');
+        }
+      } catch (error) {
+        alert('Error registering. Please try again.');
+      }
+    }
+  };
+
+  return (
+    <div className="login-container">
+      <div className="login-card">
+        <h2>Create Account</h2>
+        <p>Join Summit Gear today</p>
+
+        <form onSubmit={handleRegister}>
+          <div className="input-group">
+            <label>Email Address</label>
+            <input
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="input-group">
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+
+          <button type="submit" className="login-button">
+            Sign Up
+          </button>
+        </form>
+
+        <div className="login-footer">
+          <span>
+            Already have an account?{' '}
+            <button className="link-button" onClick={onSwitch}>
+              Sign In
+            </button>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
