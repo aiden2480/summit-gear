@@ -1,6 +1,7 @@
 import aiohttp_cors
 from aiohttp import web
 from database import init_db
+from routes.auth import routes as auth_routes
 from routes.cart import routes as cart_routes
 from routes.products import routes as product_routes
 
@@ -9,6 +10,7 @@ def create_app() -> web.Application:
     app = web.Application()
     app.on_startup.append(init_db)
 
+    app.router.add_routes(auth_routes)
     app.router.add_routes(product_routes)
     app.router.add_routes(cart_routes)
 

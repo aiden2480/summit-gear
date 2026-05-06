@@ -5,13 +5,17 @@ import CategoryFilter from "./components/CategoryFilter";
 import ProductGrid from "./components/ProductGrid";
 import CartDrawer from "./components/CartDrawer";
 import Toast from "./components/Toast";
+import Login from "./components/Login";
+import Register from "./components/Register";
 import useToast from "./hooks/useToast";
 import useProducts from "./hooks/useProducts";
 import useCart from "./hooks/useCart";
 import "./shared.css";
 import "./App.css";
 
-function App() {
+type AuthView = "login" | "register";
+
+function ShopPage() {
   const { toasts, addToast } = useToast();
   const {
     products,
@@ -37,9 +41,16 @@ function App() {
     await refreshStock();
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    window.location.reload();
+  };
+
   return (
     <div className="app">
-      <Header cartCount={cartCount} onCartClick={() => setCartOpen(true)} />
+      <Header cartCount={cartCount} onCartClick={() => setCartOpen(true)} onLogout={handleLogout} />
 
       <main className="main">
         <div className="main__toolbar">
@@ -71,4 +82,26 @@ function App() {
   );
 }
 
+function App() {
+  const [user, setUser] = useState<string | null>(localStorage.getItem("user"));
+  const [authView, setAuthView] = useState<AuthView>("login");
+
+  const handleLogin = (username: string, token: string) => {
+    setUser(username);
+    localStorage.setItem("user", username);
+    localStorage.setItem("token", token);
+  };
+
+  if (!user) {
+    return authView === "login" ? (
+      <Login onLogin={handleLogin} onSwitch={() => setAuthView("register")} />
+    ) : (
+      <Register onLogin={handleLogin} onSwitch={() => setAuthView("login")} />
+    );
+  }
+
+  return <ShopPage />;
+}
+
 export default App;
+
