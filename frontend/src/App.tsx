@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 import SearchBar from "./components/SearchBar";
 import CategoryFilter from "./components/CategoryFilter";
@@ -13,9 +14,26 @@ import useCart from "./hooks/useCart";
 import "./shared.css";
 import "./App.css";
 
-type AuthView = "login" | "register";
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const user = localStorage.getItem("user");
+  return !user ? <Navigate to="/login" replace /> : <>{children}</>;
+};
+
+const ProtectedLoginRoute = ({ children }: { children: React.ReactNode }) => {
+  const user = localStorage.getItem("user");
+  return user ? <Navigate to="/" replace /> : <>{children}</>;
+};
+
+function NoMatch() {
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>404: Page Not Found</h2>
+    </div>
+  );
+}
 
 function ShopPage() {
+  const navigate = useNavigate();
   const { toasts, addToast } = useToast();
   const {
     products,
@@ -45,7 +63,7 @@ function ShopPage() {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    window.location.reload();
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -82,26 +100,16 @@ function ShopPage() {
   );
 }
 
-function App() {
-  const [user, setUser] = useState<string | null>(localStorage.getItem("user"));
-  const [authView, setAuthView] = useState<AuthView>("login");
-
-  const handleLogin = (username: string, token: string) => {
-    setUser(username);
-    localStorage.setItem("user", username);
-    localStorage.setItem("token", token);
-  };
-
-  if (!user) {
-    return authView === "login" ? (
-      <Login onLogin={handleLogin} onSwitch={() => setAuthView("register")} />
-    ) : (
-      <Register onLogin={handleLogin} onSwitch={() => setAuthView("login")} />
-    );
-  }
-
-  return <ShopPage />;
+export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<ProtectedRoute><ShopPage /></ProtectedRoute>} />
+        <Route path="/login" element={<ProtectedLoginRoute><Login /></ProtectedLoginRoute>} />
+        <Route path="/register" element={<ProtectedLoginRoute><Register /></ProtectedLoginRoute>} />
+        <Route path="*" element={<NoMatch />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
-
-export default App;
 

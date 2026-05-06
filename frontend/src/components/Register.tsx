@@ -1,16 +1,13 @@
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import './Login.css';
 
 const API_BASE_URL = 'http://localhost:8080';
 
-interface RegisterProps {
-  onLogin: (user: string, token: string) => void;
-  onSwitch: () => void;
-}
-
-const Register = ({ onLogin, onSwitch }: RegisterProps) => {
+const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,25 +15,20 @@ const Register = ({ onLogin, onSwitch }: RegisterProps) => {
       try {
         const response = await fetch(API_BASE_URL + '/register', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            username: email,
-            password: password,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: email, password }),
         });
         if (response.ok) {
           const data = await response.json();
           localStorage.setItem('user', data.user);
           localStorage.setItem('token', data.token);
           localStorage.setItem('role', data.role);
-          onLogin(data.user, data.token);
+          navigate('/', { replace: true });
         } else {
           const err = await response.json();
           alert(err.error || 'Registration failed. Please try again.');
         }
-      } catch (error) {
+      } catch {
         alert('Error registering. Please try again.');
       }
     }
@@ -71,18 +63,11 @@ const Register = ({ onLogin, onSwitch }: RegisterProps) => {
             />
           </div>
 
-          <button type="submit" className="login-button">
-            Sign Up
-          </button>
+          <button type="submit" className="login-button">Sign Up</button>
         </form>
 
         <div className="login-footer">
-          <span>
-            Already have an account?{' '}
-            <button className="link-button" onClick={onSwitch}>
-              Sign In
-            </button>
-          </span>
+          <span>Already have an account? <Link to="/login">Sign In</Link></span>
         </div>
       </div>
     </div>
