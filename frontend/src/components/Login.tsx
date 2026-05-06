@@ -1,16 +1,13 @@
 import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import './Login.css';
 
 const API_BASE_URL = 'http://localhost:8080';
 
-interface LoginProps {
-  onLogin: (user: string, token: string) => void;
-  onSwitch: () => void;
-}
-
-const Login = ({ onLogin, onSwitch }: LoginProps) => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,25 +15,19 @@ const Login = ({ onLogin, onSwitch }: LoginProps) => {
       try {
         const response = await fetch(API_BASE_URL + '/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            username: email,
-            password: password,
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: email, password }),
         });
         if (response.ok) {
           const data = await response.json();
-          // Store token, username, and role in localStorage for persistence across refreshes
           localStorage.setItem('user', data.user);
           localStorage.setItem('token', data.token);
           localStorage.setItem('role', data.role);
-          onLogin(data.user, data.token);
+          navigate('/', { replace: true });
         } else {
           alert('Login failed. Please check your credentials.');
         }
-      } catch (error) {
+      } catch {
         alert('Error logging in. Please try again.');
       }
     }
@@ -71,18 +62,11 @@ const Login = ({ onLogin, onSwitch }: LoginProps) => {
             />
           </div>
 
-          <button type="submit" className="login-button">
-            Sign In
-          </button>
+          <button type="submit" className="login-button">Sign In</button>
         </form>
 
         <div className="login-footer">
-          <span>
-            Don't have an account?{' '}
-            <button className="link-button" onClick={onSwitch}>
-              Sign Up
-            </button>
-          </span>
+          <span>Don't have an account? <Link to="/register">Sign Up</Link></span>
         </div>
       </div>
     </div>
