@@ -8,11 +8,13 @@ const API_BASE_URL = 'http://localhost:8080';
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (email.trim() && password.trim()) {
       try {
         const response = await fetch(API_BASE_URL + '/register', {
@@ -26,10 +28,10 @@ const Register = () => {
           navigate('/', { replace: true });
         } else {
           const err = await response.json();
-          alert(err.error || 'Registration failed. Please try again.');
+          setError(err.error || 'Registration failed. Please try again.');
         }
       } catch {
-        alert('Error registering. Please try again.');
+        setError('Error registering. Please try again.');
       }
     }
   };
@@ -65,6 +67,7 @@ const Register = () => {
           </div>
 
           <button type="submit" className="login-button">Sign Up</button>
+          {error && <p className="login-error">{error}</p>}
         </form>
 
         <div className="login-footer">
