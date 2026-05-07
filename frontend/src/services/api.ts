@@ -1,12 +1,15 @@
 const API_BASE = "http://localhost:8080/api";
 
-async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${url}`, {
-    headers: { "Content-Type": "application/json" },
-    ...options,
-  });
+async function request<T>(url: string, options: RequestInit = {}, token?: string): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE}${url}`, { headers, ...options });
 
   if (!res.ok) {
+    if (res.status === 401) {
+      window.dispatchEvent(new CustomEvent("auth:unauthorized"));
+    }
     const text = await res.text();
     throw new Error(text || `Request failed with status ${res.status}`);
   }
