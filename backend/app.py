@@ -1,5 +1,9 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import aiohttp_cors
 from aiohttp import web
+from aiohttp_swagger import setup_swagger
 from database import init_db
 from routes.auth import routes as auth_routes
 from routes.cart import routes as cart_routes
@@ -27,6 +31,8 @@ def create_app() -> web.Application:
 
     for route in list(app.router.routes()):
         cors.add(route)
+
+    setup_swagger(app, swagger_url="/docs", title="Summit Gear API", api_version="1.0")
 
     return app
 

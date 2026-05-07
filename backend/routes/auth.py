@@ -11,7 +11,9 @@ from database.models import User
 
 routes = web.RouteTableDef()
 
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "summit-gear-secret-key-change-in-production")
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY environment variable is not set")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
@@ -58,6 +60,32 @@ async def require_admin(request: web.Request) -> dict:
 
 @routes.post("/login")
 async def login(request: web.Request) -> web.Response:
+    """
+    ---
+    summary: Login and receive a JWT token
+    tags: [Auth]
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [username, password]
+          properties:
+            username:
+              type: string
+              example: user@example.com
+            password:
+              type: string
+              example: password123
+    responses:
+      200:
+        description: Login successful — returns JWT token
+      400:
+        description: Invalid email format
+      401:
+        description: Invalid credentials
+    """
     data = await request.json()
     username = data.get("username", "").strip()
     password = data.get("password", "")
@@ -83,6 +111,32 @@ async def login(request: web.Request) -> web.Response:
 
 @routes.post("/register")
 async def register(request: web.Request) -> web.Response:
+    """
+    ---
+    summary: Register a new user account
+    tags: [Auth]
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          type: object
+          required: [username, password]
+          properties:
+            username:
+              type: string
+              example: newuser@example.com
+            password:
+              type: string
+              example: password123
+    responses:
+      201:
+        description: Registration successful — returns JWT token
+      400:
+        description: Invalid email format or missing fields
+      409:
+        description: Username already exists
+    """
     data = await request.json()
     username = data.get("username", "").strip()
     password = data.get("password", "")
