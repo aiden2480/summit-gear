@@ -90,6 +90,9 @@ async def register(request: web.Request) -> web.Response:
     if not username or not password:
         return web.json_response({"error": "Username and password required"}, status=400)
 
+    if len(password) < 8:
+        return web.json_response({"error": "Password must be at least 8 characters"}, status=400)
+
     try:
         validate_email(username, check_deliverability=False)
     except EmailNotValidError as e:
