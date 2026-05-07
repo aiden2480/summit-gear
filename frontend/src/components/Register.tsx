@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 const API_BASE_URL = 'http://localhost:8080';
@@ -8,6 +9,7 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,9 +22,7 @@ const Register = () => {
         });
         if (response.ok) {
           const data = await response.json();
-          localStorage.setItem('user', data.user);
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('role', data.role);
+          login(data.user, data.token, data.role);
           navigate('/', { replace: true });
         } else {
           const err = await response.json();
