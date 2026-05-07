@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthState {
   user: string | null;
@@ -34,6 +34,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("role");
     setAuth({ user: null, token: null, role: null });
   };
+
+  useEffect(() => {
+    window.addEventListener("auth:unauthorized", logout);
+    return () => window.removeEventListener("auth:unauthorized", logout);
+  }, []);
 
   return (
     <AuthContext.Provider value={{ auth, login, logout }}>
