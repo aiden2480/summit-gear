@@ -1,3 +1,5 @@
+import { CartItem } from "../types"
+
 const API_BASE = "http://localhost:8080/api";
 
 async function request<T>(url: string, options: RequestInit = {}): Promise<T> {
@@ -37,9 +39,9 @@ export const productApi = {
 };
 
 export const cartApi = {
-  getAll: () => get<import("../types").CartItem[]>("/cart"),
-  add: (productId: number, quantity = 1) => post<import("../types").CartItem>("/cart", { product_id: productId, quantity }),
-  update: (id: number, quantity: number) => put<import("../types").CartItem>(`/cart/${id}`, { quantity }),
+  getAll: () => get<CartItem[]>("/cart"),
+  add: (productId: number, quantity = 1) => post<CartItem>("/cart", { product_id: productId, quantity }),
+  update: (id: number, quantity: number) => put<CartItem>(`/cart/${id}`, { quantity }),
   remove: (id: number) => del<{ message: string }>(`/cart/${id}`),
   clear: () => del<{ message: string }>("/cart"),
   checkout: () => post<{ status: string; message: string }>("/checkout", {}),
