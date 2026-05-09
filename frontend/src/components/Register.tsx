@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 const API_BASE_URL = 'http://localhost:8080';
@@ -7,10 +8,13 @@ const API_BASE_URL = 'http://localhost:8080';
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (email.trim() && password.trim()) {
       try {
         const response = await fetch(API_BASE_URL + '/register', {
@@ -20,16 +24,14 @@ const Register = () => {
         });
         if (response.ok) {
           const data = await response.json();
-          localStorage.setItem('user', data.user);
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('role', data.role);
+          login(data.user, data.token, data.role);
           navigate('/', { replace: true });
         } else {
           const err = await response.json();
-          alert(err.error || 'Registration failed. Please try again.');
+          setError(err.error || 'Registration failed. Please try again.');
         }
       } catch {
-        alert('Error registering. Please try again.');
+        setError('Error registering. Please try again.');
       }
     }
   };
@@ -59,11 +61,13 @@ const Register = () => {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
               required
             />
           </div>
 
           <button type="submit" className="login-button">Sign Up</button>
+          {error && <p className="login-error">{error}</p>}
         </form>
 
         <div className="login-footer">

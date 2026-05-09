@@ -1,3 +1,4 @@
+import { useAuth } from "../context/AuthContext";
 import "./Header.css";
 
 interface HeaderProps {
@@ -7,8 +8,7 @@ interface HeaderProps {
 }
 
 export default function Header({ cartCount, onCartClick, onLogout }: HeaderProps) {
-  const user = localStorage.getItem("user");
-  const role = localStorage.getItem("role");
+  const { auth } = useAuth();
 
   return (
     <header className="header">
@@ -20,10 +20,10 @@ export default function Header({ cartCount, onCartClick, onLogout }: HeaderProps
           <h1 className="header__title">Summit Gear</h1>
         </div>
         <nav className="header__actions">
-          {user && (
+          {auth.user && (
             <span className="header__user">
-              👤 {user}
-              {role === "admin" && <span className="header__admin-badge">Admin</span>}
+              👤 {auth.user}
+              {auth.role === "admin" && <span className="header__admin-badge">Admin</span>}
             </span>
           )}
           <button className="btn btn--cart" onClick={onCartClick} aria-label={`Shopping cart with ${cartCount} items`}>
