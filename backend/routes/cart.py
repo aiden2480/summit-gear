@@ -113,7 +113,7 @@ async def remove_from_cart(request : web.Request):
         if not item:
             raise web.HTTPNotFound(text="Cart item not found")
 
-        await session.delete(item)
+        await session.delete(item).where(CartItem.username == current_user_username)
         await session.commit()
 
     return web.json_response({"message": "Item removed from cart"})
@@ -149,7 +149,7 @@ async def checkout(request : web.Request):
             item.product.stock -= item.quantity
 
         # Clear cart
-        await session.execute(delete(CartItem))
+        await session.execute(delete(CartItem).where(CartItem.username == current_user_username))
         await session.commit()
 
     return web.json_response({"status": "success", "message": "Order placed successfully"})
