@@ -40,7 +40,7 @@ class CartItem(SQLModel, table=True):
 
     id: int = Field(default=None, primary_key=True)
     product_id: int = Field(foreign_key="products.id")
-    username: int = Field(foreign_key="users.username")
+    username: str = Field(foreign_key="users.username")
     quantity: int = 1
     product: Product = Relationship(back_populates="cart_items")
     user: User = Relationship(back_populates="cart")
