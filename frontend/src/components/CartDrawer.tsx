@@ -4,6 +4,7 @@ import CartItem from "./CartItem";
 import OrderSuccess from "./OrderSuccess";
 import { cartApi } from "../services/api";
 import type { CartItem as CartItemType, ToastType } from "../types";
+import { useAuth } from "../context/AuthContext";
 
 interface CartDrawerProps {
   open: boolean;
@@ -24,6 +25,7 @@ function getErrorMessage(error: unknown) {
 export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear, onCheckoutSuccess, addToast }: CartDrawerProps) {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const { auth } = useAuth();
 
   const handleOrderClose = useCallback(() => {
     setOrderPlaced(false);
@@ -53,7 +55,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
 
   const handleCheckout = async () => {
     try {
-      await cartApi.checkout();
+      await cartApi.checkout(auth.token);
       const newOrderId = generateOrderId();
       setOrderId(newOrderId);
       setOrderPlaced(true);

@@ -2,9 +2,11 @@ import { CartItem } from "../types"
 
 const API_BASE = "http://localhost:8080/api";
 
-async function request<T>(url: string, options: RequestInit = {}, token?: string): Promise<T> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+async function request<T>(url: string, token: string | null, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers();
+  if (token) {
+    headers.append("Authorization", `Bearer ${token}`);
+  }
 
   const res = await fetch(`${API_BASE}${url}`, { headers, ...options });
 
@@ -19,10 +21,10 @@ async function request<T>(url: string, options: RequestInit = {}, token?: string
   return res.json() as Promise<T>;
 }
 
-const get = <T>(url: string) => request<T>(url);
-const post = <T>(url: string, data: unknown) => request<T>(url, { method: "POST", body: JSON.stringify(data) });
-const put = <T>(url: string, data: unknown) => request<T>(url, { method: "PUT", body: JSON.stringify(data) });
-const del = <T>(url: string) => request<T>(url, { method: "DELETE" });
+const get = <T>(url: string, token: string | null = null) => request<T>(url, token);
+const post = <T>(url: string, data: unknown, token: string | null = null) => request<T>(url, token, { method: "POST", body: JSON.stringify(data) });
+const put = <T>(url: string, data: unknown, token: string | null = null) => request<T>(url, token, { method: "PUT", body: JSON.stringify(data) });
+const del = <T>(url: string, token: string | null = null) => request<T>(url, token, { method: "DELETE" });
 
 export const productApi = {
   getAll: (category?: string, search?: string) => {
@@ -42,12 +44,12 @@ export const productApi = {
 };
 
 export const cartApi = {
-  getAll: () => get<CartItem[]>("/cart"),
-  add: (productId: number, quantity = 1) => post<CartItem>("/cart", { product_id: productId, quantity }),
-  update: (id: number, quantity: number) => put<CartItem>(`/cart/${id}`, { quantity }),
-  remove: (id: number) => del<{ message: string }>(`/cart/${id}`),
-  clear: () => del<{ message: string }>("/cart"),
-  checkout: () => post<{ status: string; message: string }>("/checkout", {}),
+  getAll: (token: string | null = null) => get<CartItem[]>("/cart", token),
+  add: (productId: number, quantity = 1, token: string | null) => post<CartItem>("/cart", { product_id: productId, quantity }, token),
+  update: (id: number, quantity: number, token: string | null) => put<CartItem>(`/cart/${id}`, { quantity }, token),
+  remove: (id: number, token: string | null) => del<{ message: string }>(`/cart/${id}`, token),
+  clear: (token: string | null) => del<{ message: string }>("/cart", token),
+  checkout: (token: string | null) => post<{ status: string; message: string }>("/checkout", {}, token),
 };
 
 export const categoryApi = {
