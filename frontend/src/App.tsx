@@ -11,17 +11,18 @@ import Register from "./components/Register";
 import useToast from "./hooks/useToast";
 import useProducts from "./hooks/useProducts";
 import useCart from "./hooks/useCart";
+import { useAuth } from "./context/AuthContext";
 import "./shared.css";
 import "./App.css";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const user = localStorage.getItem("user");
-  return !user ? <Navigate to="/login" replace /> : <>{children}</>;
+  const { auth } = useAuth();
+  return !auth.user ? <Navigate to="/login" replace /> : <>{children}</>;
 };
 
 const ProtectedLoginRoute = ({ children }: { children: React.ReactNode }) => {
-  const user = localStorage.getItem("user");
-  return user ? <Navigate to="/" replace /> : <>{children}</>;
+  const { auth } = useAuth();
+  return auth.user ? <Navigate to="/" replace /> : <>{children}</>;
 };
 
 function NoMatch() {
@@ -59,10 +60,10 @@ function ShopPage() {
     await refreshStock();
   };
 
+  const { logout } = useAuth();
+
   const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
+    logout();
     navigate("/login", { replace: true });
   };
 

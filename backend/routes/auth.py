@@ -3,6 +3,7 @@ import jwt
 import bcrypt
 from aiohttp import web
 from datetime import datetime, timedelta, timezone
+from email_validator import validate_email, EmailNotValidError
 from sqlmodel import select
 from database import get_session
 from database.models import User
@@ -64,6 +65,11 @@ async def login(request: web.Request) -> web.Response:
     if not username or not password:
         return web.json_response({"error": "Username and password required"}, status=400)
 
+    try:
+        validate_email(username, check_deliverability=False)
+    except EmailNotValidError as e:
+        return web.json_response({"error": f"Invalid email address: {e}"}, status=400)
+
     async with get_session() as session:
         result = await session.execute(select(User).where(User.username == username))
         user = result.scalars().first()
@@ -83,6 +89,14 @@ async def register(request: web.Request) -> web.Response:
 
     if not username or not password:
         return web.json_response({"error": "Username and password required"}, status=400)
+
+    if len(password) < 8:
+        return web.json_response({"error": "Password must be at least 8 characters"}, status=400)
+
+    try:
+        validate_email(username, check_deliverability=False)
+    except EmailNotValidError as e:
+        return web.json_response({"error": f"Invalid email address: {e}"}, status=400)
 
     async with get_session() as session:
         result = await session.execute(select(User).where(User.username == username))
