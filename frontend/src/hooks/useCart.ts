@@ -1,24 +1,26 @@
 import { useState, useEffect, useCallback } from "react";
 import { cartApi } from "../services/api";
 import type { CartItem, ToastType } from "../types";
+import { useAuth } from "../context/AuthContext";
 
 type AddToast = (message: string, type?: ToastType) => void;
 
 export default function useCart(addToast: AddToast) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const { auth } = useAuth();
 
   const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await cartApi.getAll();
+      const data = await cartApi.getAll(auth.token);
       setCartItems(data);
     } catch {
       addToast("Failed to load cart", "error");
     } finally {
       setLoading(false);
     }
-  }, [addToast]);
+  }, [addToast, auth.token]);
 
   useEffect(() => {
     void fetchCart();
@@ -27,7 +29,7 @@ export default function useCart(addToast: AddToast) {
   const addToCart = async (productId: number) => {
     try {
       const existingItem = cartItems.find((item) => item.product_id === productId);
-      await cartApi.add(productId, 1);
+      await cartApi.add(productId, 1, auth.token);
       await fetchCart();
 
       if (existingItem) {
@@ -42,7 +44,7 @@ export default function useCart(addToast: AddToast) {
 
   const updateQuantity = async (itemId: number, quantity: number) => {
     try {
-      await cartApi.update(itemId, quantity);
+      await cartApi.update(itemId, quantity, auth.token);
       await fetchCart();
     } catch (error: unknown) {
       addToast(error instanceof Error ? error.message : "Failed to update quantity", "error");
@@ -51,7 +53,7 @@ export default function useCart(addToast: AddToast) {
 
   const removeItem = async (itemId: number) => {
     try {
-      await cartApi.remove(itemId);
+      await cartApi.remove(itemId, auth.token);
       await fetchCart();
     } catch (error: unknown) {
       addToast(error instanceof Error ? error.message : "Failed to remove item", "error");
@@ -60,7 +62,7 @@ export default function useCart(addToast: AddToast) {
 
   const clearCart = async () => {
     try {
-      await cartApi.clear();
+      await cartApi.clear(auth.token);
       await fetchCart();
       addToast("Cart cleared");
     } catch {

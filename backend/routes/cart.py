@@ -3,16 +3,16 @@ from sqlmodel import select, delete
 from sqlalchemy.orm import joinedload
 from database import get_session
 from database.models import CartItem, Product
-
+from routes.auth import get_current_user
 
 routes = web.RouteTableDef()
 
-
 @routes.get("/api/cart")
-async def get_cart(request):
+async def get_cart(request : web.Request):
     async with get_session() as session:
+        username = (await get_current_user(request)).get("username", "");
         result = await session.execute(
-            select(CartItem).options(joinedload(CartItem.product)).order_by(CartItem.id)
+            select(CartItem).where(CartItem.username == username).options(joinedload(CartItem.product)).order_by(CartItem.id)
         )
         items = result.unique().scalars().all()
 
@@ -20,7 +20,7 @@ async def get_cart(request):
 
 
 @routes.post("/api/cart")
-async def add_to_cart(request):
+async def add_to_cart(request : web.Request):
     data = await request.json()
     product_id = data.get("product_id")
     quantity = data.get("quantity", 1)
@@ -33,6 +33,7 @@ async def add_to_cart(request):
     async with get_session() as session:
         # Get product
         result = await session.execute(select(Product).where(Product.id == product_id))
+        current_user_username = (await get_current_user(request)).get("username", "")
         product = result.scalar()
         if not product:
             raise web.HTTPNotFound(text="Product not found")
@@ -41,7 +42,8 @@ async def add_to_cart(request):
             raise web.HTTPBadRequest(text="Not enough stock available")
 
         # Check if product already in cart
-        result = await session.execute(select(CartItem).where(CartItem.product_id == product_id))
+        query = select(CartItem).where(CartItem.product_id == product_id, CartItem.username == current_user_username)
+        result = await session.execute(query)
         existing = result.scalar()
 
         if existing:
@@ -50,7 +52,7 @@ async def add_to_cart(request):
                 raise web.HTTPBadRequest(text="Not enough stock available")
             existing.quantity = new_qty
         else:
-            cart_item = CartItem(product_id=product_id, quantity=quantity)
+            cart_item = CartItem(product_id=product_id, quantity=quantity, username=current_user_username)
             session.add(cart_item)
 
         await session.commit()
@@ -58,7 +60,7 @@ async def add_to_cart(request):
         # Fetch updated item with product relationship
         result = await session.execute(
             select(CartItem)
-            .where(CartItem.product_id == product_id)
+            .where(CartItem.product_id == product_id, CartItem.username == current_user_username)
             .options(joinedload(CartItem.product))
         )
         item = result.unique().scalar()
@@ -67,7 +69,7 @@ async def add_to_cart(request):
 
 
 @routes.put("/api/cart/{id}")
-async def update_cart_item(request):
+async def update_cart_item(request : web.Request):
     item_id = int(request.match_info["id"])
     data = await request.json()
     quantity = data.get("quantity")
@@ -78,9 +80,10 @@ async def update_cart_item(request):
         raise web.HTTPBadRequest(text="Quantity must be at least 1")
 
     async with get_session() as session:
+        current_user_username = (await get_current_user(request)).get("username", "")
         result = await session.execute(
             select(CartItem)
-            .where(CartItem.id == item_id)
+            .where(CartItem.id == item_id, CartItem.username == current_user_username)
             .options(joinedload(CartItem.product))
         )
         item = result.unique().scalar()
@@ -99,38 +102,43 @@ async def update_cart_item(request):
 
 
 @routes.delete("/api/cart/{id}")
-async def remove_from_cart(request):
+async def remove_from_cart(request : web.Request):
     item_id = int(request.match_info["id"])
     
     async with get_session() as session:
-        result = await session.execute(select(CartItem).where(CartItem.id == item_id))
+        current_user_username = (await get_current_user(request)).get("username", "")
+        result = await session.execute(select(CartItem).where(CartItem.id == item_id, CartItem.username == current_user_username))
         item = result.scalar()
 
         if not item:
             raise web.HTTPNotFound(text="Cart item not found")
 
-        await session.delete(item)
+        statement = delete(CartItem).where(CartItem.id == item_id, CartItem.username == current_user_username)
+        await session.execute(statement);
         await session.commit()
 
     return web.json_response({"message": "Item removed from cart"})
 
 
 @routes.delete("/api/cart")
-async def clear_cart(request):
+async def clear_cart(request : web.Request):
     async with get_session() as session:
-        await session.execute(delete(CartItem))
+        current_user_username = (await get_current_user(request)).get("username", "")
+        statement = delete(CartItem).where(CartItem.username == current_user_username)
+        await session.execute(statement)
         await session.commit()
 
     return web.json_response({"message": "Cart cleared"})
 
 
 @routes.post("/api/checkout")
-async def checkout(request):
+async def checkout(request : web.Request):
     """Atomically validates stock, reduces quantities, and clears the cart."""
 
     async with get_session() as session:
+        current_user_username = (await get_current_user(request)).get("username", "")
         # Get all cart items
-        result = await session.execute(select(CartItem).options(joinedload(CartItem.product)))
+        result = await session.execute(select(CartItem).where(CartItem.username == current_user_username).options(joinedload(CartItem.product)))
         items = result.unique().scalars().all()
 
         if not items:
@@ -143,7 +151,8 @@ async def checkout(request):
             item.product.stock -= item.quantity
 
         # Clear cart
-        await session.execute(delete(CartItem))
+        statement = delete(CartItem).where(CartItem.username == current_user_username);
+        await session.execute(statement)
         await session.commit()
 
     return web.json_response({"status": "success", "message": "Order placed successfully"})
