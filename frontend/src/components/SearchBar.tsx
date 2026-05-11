@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import "./SearchBar.css";
 
 interface SearchBarProps {
@@ -6,6 +7,23 @@ interface SearchBarProps {
 }
 
 export default function SearchBar({ value, onChange }: SearchBarProps) {
+  const [internalValue, setInternalValue] = useState(value);
+  const delay = 300;
+
+  useEffect(() => {
+    setInternalValue(value);
+  }, [value]);
+
+  // debounce emitting changes to parent
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (internalValue !== value) {
+        onChange(internalValue);
+      }
+    }, delay);
+    return () => clearTimeout(id);
+  }, [internalValue, delay, onChange, value]);
+
   return (
     <div className="search-bar">
       <span className="search-bar__icon" aria-hidden="true">
@@ -15,14 +33,17 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
         className="search-bar__input"
         type="text"
         placeholder="Search gear..."
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={internalValue}
+        onChange={(e) => setInternalValue(e.target.value)}
         aria-label="Search gear"
       />
-      {value && (
+      {internalValue && (
         <button
           className="search-bar__clear"
-          onClick={() => onChange("")}
+          onClick={() => {
+            setInternalValue("");
+            onChange("");
+          }}
           aria-label="Clear search"
         >
           <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
