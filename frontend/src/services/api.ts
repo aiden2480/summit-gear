@@ -1,4 +1,4 @@
-import { CartItem } from "../types"
+import { CartItem, User } from "../types"
 
 const API_BASE = "http://localhost:8080/api";
 
@@ -55,3 +55,7 @@ export const cartApi = {
 export const categoryApi = {
   getAll: () => get<string[]>("/categories"),
 };
+
+export const userApi = {
+  getAll: (token : string | null = null) => get<User[]>("/users", token),
+}

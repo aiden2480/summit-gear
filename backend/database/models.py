@@ -10,6 +10,13 @@ class User(SQLModel, table=True):
     hashed_password: str
     role: str = Field(default="user")  # "user" or "admin"
     cart: List["CartItem"] = Relationship(back_populates="user", cascade_delete=True)
+    
+    def to_dict(self): 
+        return {
+            "id" : self.id,
+            "username" : self.username,
+            "role" : self.role
+        }
 
 class Product(SQLModel, table=True):
     __tablename__ = "products"

@@ -1,0 +1,125 @@
+.user-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.5rem 0.5rem 1.5rem 1.5rem;
+}
+
+.user-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.user-card__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark, #0056b3));
+  color: white;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.user-card__badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.user-card__badge[data-role="admin"] {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.user-card__badge[data-role="user"] {
+  background-color: #dbeafe;
+  color: #0284c7;
+}
+
+.user-card__body {
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.user-card__username {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.user-card__email {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  word-break: break-all;
+}
+
+.user-card__created {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.user-card__footer {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  width: fit-content;
+  align-self: flex-start;
+}
+
+.btn--small {
+  padding: 0.625rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.btn--secondary {
+  background-color: var(--color-bg-tertiary, #f3f4f6);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-border);
+}
+
+.btn--success {
+  background-color: #166534;
+  color: #ffffff;
+  border: 1px solid #14532d;
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background-color: var(--color-border);
+}
+
+.btn--success:hover:not(:disabled) {
+  background-color: #14532d;
+}
+
+.btn--danger {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.btn--danger:hover:not(:disabled) {
+  background-color: #fecaca;
+}
+
+.btn:focus-visible {
+  outline: 3px solid #0f172a;
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
