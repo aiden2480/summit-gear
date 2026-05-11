@@ -22,7 +22,7 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
       }
     }, delay);
     return () => clearTimeout(id);
-  }, [internalValue, delay, onChange, value]);
+  }, [internalValue, onChange, value]);
 
   return (
     <div className="search-bar">
