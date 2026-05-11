@@ -4,7 +4,7 @@ import "./Header.css";
 interface HeaderProps {
   cartCount: number;
   onCartClick: () => void;
-  onLogout?: () => void;
+  onLogout: () => void;
 }
 
 export default function Header({ cartCount, onCartClick, onLogout }: HeaderProps) {
@@ -20,19 +20,21 @@ export default function Header({ cartCount, onCartClick, onLogout }: HeaderProps
           <h1 className="header__title">Summit Gear</h1>
         </div>
         <nav className="header__actions">
-          {auth.user && (
+          {auth.user && 
             <span className="header__user">
               👤 {auth.user}
               {auth.role === "admin" && <span className="header__admin-badge">Admin</span>}
             </span>
-          )}
-          <button className="btn btn--cart" onClick={onCartClick} aria-label={`Shopping cart with ${cartCount} items`}>
-            <span className="btn__cart-icon" aria-hidden="true">
-              <img src="/backpack.svg" alt="" className="btn__cart-img" />
-            </span>
-            Cart
-            {cartCount > 0 && <span className="header__badge">{cartCount}</span>}
-          </button>
+          }
+          {auth.role !== 'admin' &&  
+            <button className="btn btn--cart" onClick={onCartClick} aria-label={`Shopping cart with ${cartCount} items`}>
+              <span className="btn__cart-icon" aria-hidden="true">
+                <img src="/backpack.svg" alt="" className="btn__cart-img" />
+              </span>
+              Cart
+              {cartCount > -1 && <span className="header__badge">{cartCount}</span>}
+            </button> 
+          }
           {onLogout && (
             <button className="btn btn--logout" onClick={onLogout}>
               Sign Out
