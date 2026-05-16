@@ -18,8 +18,3 @@ async def get_all_users(request: web.Request) -> web.Response:
         items = result.scalars().all()
 
         return web.json_response([item.to_dict() for item in items])
-
-@routes.get("/api/users/cart/{username}")
-async def get_user_cart(request: web.Request) -> web.Response:
-    async with get_session() as session:
-        return web.json_response()

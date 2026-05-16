@@ -156,3 +156,21 @@ async def checkout(request : web.Request):
         await session.commit()
 
     return web.json_response({"status": "success", "message": "Order placed successfully"})
+
+@routes.get("/api/cart/user/{username}")
+async def getUserCart(request : web.Request) -> web.Response:
+    async with get_session() as session:
+        cartitem_user = str(request.match_info["username"])
+
+        role = (await get_current_user(request)).get("role", "");
+
+        if (role != "admin") :
+            raise web.HTTPUnauthorized(text="You are not authorised to perform this action.");
+
+        result = await session.execute(
+            select(CartItem).where(CartItem.username == cartitem_user).options(joinedload(CartItem.product)).order_by(CartItem.id)
+        )
+        items = result.unique().scalars().all()
+
+        return web.json_response([item.to_dict() for item in items])
+
