@@ -49,7 +49,7 @@ export default function UserCard({ user, onEdit, onDelete, openCart }: UserCardP
         )}
         <button
           type="button"
-          className="btn btn--small"
+          className="btn btn--info btn--small"
           onClick={() => {
             openCart(user.username);
           }}
