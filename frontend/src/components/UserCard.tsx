@@ -47,15 +47,18 @@ export default function UserCard({ user, onEdit, onDelete, openCart }: UserCardP
             Delete
           </button>
         )}
-        <button
-          type="button"
-          className="btn btn--info btn--small"
-          onClick={() => {
-            openCart(user.username);
-          }}
-        >
-          View Cart
-        </button>
+        {user.role != "admin" && (
+          <button
+            type="button"
+            className="btn btn--info btn--small"
+            onClick={() => {
+              openCart(user.username);
+            }}
+          >
+            View Cart
+          </button>
+        )}
+        
       </div>
     </Card>
   );

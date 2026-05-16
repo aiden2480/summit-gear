@@ -15,6 +15,7 @@ interface AdminDashboardProps {
 export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
   const [cartOpen, setCartOpen] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
   const { toasts, addToast } = useToast();
   const { auth } = useAuth();
 
@@ -26,11 +27,18 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
     try {
       const userCart = await userApi.getCart(username, auth.token);
       setCartItems(userCart);
+      setSelectedUsername(username);
       setCartOpen(true);
     } catch (error: unknown) {
       addToast(error instanceof Error ? error.message : "Failed to load user cart", "error");
     }
   };
+
+  const onCartDrawClose = () => {
+    setCartOpen(false);
+    //This is done to ensure that we do not set the username back until the draw is actually closed
+    setTimeout(() => setSelectedUsername(null), 400);
+  }
 
   return (
     <div>
@@ -41,7 +49,8 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
           open={cartOpen}
           cartItems={cartItems}
           cartTotal={cartTotal}
-          onClose={() => setCartOpen(false)}
+          onClose={onCartDrawClose}
+          selectedUsername={selectedUsername}
           addToast={addToast}
         />
       <Toast toasts={toasts} />

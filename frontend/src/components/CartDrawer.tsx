@@ -11,6 +11,7 @@ interface CartDrawerProps {
   cartItems: CartItemType[];
   cartTotal: number;
   onClose: () => void;
+  selectedUsername?: string | null;
   onUpdate?: (itemId: number, quantity: number) => void | Promise<void>;
   onRemove?: (itemId: number) => void | Promise<void>;
   onClear?: () => void | Promise<void>;
@@ -22,7 +23,7 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Checkout failed. Please try again.";
 }
 
-export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpdate, onRemove, onClear, onCheckoutSuccess, addToast }: CartDrawerProps) {
+export default function CartDrawer({ open, cartItems, cartTotal, onClose, selectedUsername, onUpdate, onRemove, onClear, onCheckoutSuccess, addToast }: CartDrawerProps) {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
   const { auth } = useAuth();
@@ -85,7 +86,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
         aria-hidden={!open}
       >
         <div className="cart-drawer__header">
-          <h2 className="cart-drawer__title">Your Cart</h2>
+          <h2 className="cart-drawer__title">{selectedUsername ? `${selectedUsername}'s Cart` : "Your Cart"}</h2>
           <button className="btn--close" onClick={onClose} aria-label="Close cart">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="1" y1="1" x2="13" y2="13"/><line x1="13" y1="1" x2="1" y2="13"/></svg>
           </button>
@@ -95,10 +96,12 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
           {cartItems.length === 0 ? (
             <div className="cart-drawer__empty">
               <img src="/backpack.svg" alt="" className="cart-drawer__empty-img" aria-hidden="true" />
-              <p>Your cart is empty</p>
-              <button className="btn btn--primary" onClick={onClose}>
-                Continue Shopping
-              </button>
+              <p>{selectedUsername ? `${selectedUsername}'s cart is empty` : 'Your cart is empty'}</p>
+              {!isViewOnly && (
+                <button className="btn btn--primary" onClick={onClose}>
+                  Continue Shopping
+                </button>
+              )}
             </div>
           ) : (
             <ul className="cart-drawer__list">
