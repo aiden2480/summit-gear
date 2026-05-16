@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import "./CartDrawer.css";
-import CartItem from "./CartItem";
+import CartItemEntry from "./CartItemEntry";
 import OrderSuccess from "./OrderSuccess";
 import { cartApi } from "../services/api";
 import type { CartItem as CartItemType, ToastType } from "../types";
@@ -11,9 +11,9 @@ interface CartDrawerProps {
   cartItems: CartItemType[];
   cartTotal: number;
   onClose: () => void;
-  onUpdate: (itemId: number, quantity: number) => void | Promise<void>;
-  onRemove: (itemId: number) => void | Promise<void>;
-  onClear: () => void | Promise<void>;
+  onUpdate?: (itemId: number, quantity: number) => void | Promise<void>;
+  onRemove?: (itemId: number) => void | Promise<void>;
+  onClear?: () => void | Promise<void>;
   onCheckoutSuccess?: () => void | Promise<void>;
   addToast: (message: string, type?: ToastType) => void;
 }
@@ -26,6 +26,8 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
   const { auth } = useAuth();
+  const isViewOnly = !onUpdate && !onRemove && !onClear && !onCheckoutSuccess;
+  const hasFooterActions = onCheckoutSuccess || onClear;
 
   const handleOrderClose = useCallback(() => {
     setOrderPlaced(false);
@@ -76,7 +78,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
     <>
       <div className={`cart-overlay${open ? " cart-overlay--visible" : ""}`} onClick={onClose} aria-hidden="true" />
       <aside
-        className={`cart-drawer${open ? " cart-drawer--open" : ""}`}
+        className={`cart-drawer${open ? " cart-drawer--open" : ""}${isViewOnly ? " cart-drawer--view-only" : ""}`}
         role="dialog"
         aria-label="Shopping cart"
         aria-modal={open}
@@ -101,28 +103,32 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, onUpda
           ) : (
             <ul className="cart-drawer__list">
               {cartItems.map((item) => (
-                <CartItem key={item.id} item={item} onUpdate={onUpdate} onRemove={onRemove} />
+                <CartItemEntry key={item.id} item={item} onUpdate={onUpdate} onRemove={onRemove} />
               ))}
             </ul>
           )}
         </div>
 
         {cartItems.length > 0 && (
-          <div className="cart-drawer__footer">
+          <div className={`cart-drawer__footer${hasFooterActions ? "" : " cart-drawer__footer--minimal"}`}>
             <div className="cart-drawer__total">
               <span>Total</span>
               <span className="cart-drawer__total-price">${cartTotal.toFixed(2)}</span>
             </div>
-            <button
-              type="button"
-              className="btn btn--primary cart-drawer__checkout"
-              onClick={() => void handleCheckout()}
-            >
-              Checkout
-            </button>
-            <button className="btn btn--text" onClick={() => void onClear()}>
-              Clear Cart
-            </button>
+            {onCheckoutSuccess && (
+              <button
+                type="button"
+                className="btn btn--primary cart-drawer__checkout"
+                onClick={() => void handleCheckout()}
+              >
+                Checkout
+              </button>
+            )}
+            {onClear && (
+              <button className="btn btn--text" onClick={() => void onClear()}>
+                Clear Cart
+              </button>
+            )}
           </div>
         )}
       </aside>

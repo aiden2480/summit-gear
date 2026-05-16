@@ -58,4 +58,5 @@ export const categoryApi = {
 
 export const userApi = {
   getAll: (token : string | null = null) => get<User[]>("/users", token),
+  getCart: (username : string, token: string | null = null) => get<CartItem[]>(`/users/cart/${username}`, token),
 }

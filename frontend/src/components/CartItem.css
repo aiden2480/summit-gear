@@ -9,6 +9,10 @@
   position: relative;
 }
 
+.cart-item--readonly {
+  padding-right: 0.75rem;
+}
+
 .cart-item:hover {
   background: var(--color-surface-alt);
 }
@@ -104,6 +108,15 @@
 .cart-item__remove:hover {
   background: var(--color-danger-bg);
   color: var(--color-danger);
+}
+
+.cart-item--readonly .cart-item__controls {
+  margin-top: 0.2rem;
+}
+
+.cart-item--readonly .cart-item__price {
+  display: inline-block;
+  margin-bottom: 0.15rem;
 }
 
 @keyframes cartItemSlide {
