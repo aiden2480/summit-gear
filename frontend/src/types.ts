@@ -18,6 +18,12 @@ export interface CartItem {
   stock: number;
 }
 
+export interface User {
+  id: number,
+  username: string;
+  role: "admin" | "user";
+}
+
 export type ToastType = "success" | "error";
 
 export interface ToastMessage {
