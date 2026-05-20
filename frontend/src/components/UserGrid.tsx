@@ -1,11 +1,15 @@
 import Grid from "./Grid";
 import UserCard from "./UserCard";
-import type { User } from "../types";
 import { useEffect, useState } from "react";
 import { userApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import type { User } from "../types";
 
-export default function UserGrid() {
+interface UserGridProps {
+  onViewCart: (username: string) => Promise<void>;
+}
+
+export default function UserGrid({ onViewCart }: UserGridProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,12 +35,12 @@ export default function UserGrid() {
     fetchUsers();
   }, [auth.token]);
 
-  const handleEditUser = (username: string) => {
+  function handleEditUser(username: string) {
     // TODO: Implement edit user
     console.log("Edit user:", username);
   };
 
-  const handleDeleteUser = (username: string) => {
+  function handleDeleteUser(username: string) {
     // TODO: Implement delete user
     console.log("Delete user:", username);
   };
@@ -51,7 +55,7 @@ export default function UserGrid() {
     >
       {users.map((user, index) => (
         <div key={user.username} style={{ animationDelay: `${index * 0.05}s` }}>
-          <UserCard user={user} onEdit={handleEditUser} onDelete={handleDeleteUser} />
+          <UserCard user={user} onEdit={handleEditUser} onDelete={handleDeleteUser} openCart={onViewCart} />
         </div>
       ))}
     </Grid>

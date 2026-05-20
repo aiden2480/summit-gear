@@ -16,6 +16,7 @@ export interface CartItem {
   price: number;
   image_url: string;
   stock: number;
+  username: string;
 }
 
 export interface User {

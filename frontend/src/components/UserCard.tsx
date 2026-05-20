@@ -4,19 +4,15 @@ import type { User } from "../types";
 
 interface UserCardProps {
   user: User;
-  onEdit?: (username: string) => void;
-  onDelete?: (username: string) => void;
-  selected?: boolean;
-  onSelect?: (username: string) => void;
+  onEdit: (username: string) => void;
+  onDelete: (username: string) => void;
+  openCart: (username: string) => void;
 }
 
-export default function UserCard({ user, onEdit, onDelete, selected = false, onSelect }: UserCardProps) {
+
+export default function UserCard({ user, onEdit, onDelete, openCart }: UserCardProps) {
   return (
-    <Card
-      className="user-card"
-      selected={selected}
-      onClick={onSelect ? () => onSelect(user.username) : undefined}
-    >
+    <Card className="user-card">
       <div className="user-card__header">
         <div className="user-card__avatar">{user.username.charAt(0).toUpperCase()}</div>
         <div className="user-card__badge" data-role={user.role}>
@@ -31,8 +27,7 @@ export default function UserCard({ user, onEdit, onDelete, selected = false, onS
           <button
             type="button"
             className="btn btn--success btn--small"
-            onClick={(event) => {
-              event.stopPropagation();
+            onClick={() => {
               onEdit(user.username);
             }}
             aria-label={`Edit ${user.username}`}
@@ -44,8 +39,7 @@ export default function UserCard({ user, onEdit, onDelete, selected = false, onS
           <button
             type="button"
             className="btn btn--danger btn--small"
-            onClick={(event) => {
-              event.stopPropagation();
+            onClick={() => {
               onDelete(user.username);
             }}
             aria-label={`Delete ${user.username}`}
@@ -53,6 +47,18 @@ export default function UserCard({ user, onEdit, onDelete, selected = false, onS
             Delete
           </button>
         )}
+        {user.role != "admin" && (
+          <button
+            type="button"
+            className="btn btn--info btn--small"
+            onClick={() => {
+              openCart(user.username);
+            }}
+          >
+            View Cart
+          </button>
+        )}
+        
       </div>
     </Card>
   );
