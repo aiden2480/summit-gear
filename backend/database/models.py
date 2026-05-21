@@ -1,9 +1,13 @@
 from typing import List, Optional
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import CheckConstraint
 
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint("role IN ('user', 'admin')", name="ck_users_role"),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(unique=True, index=True)
