@@ -1,4 +1,5 @@
 import os
+import functools
 import jwt
 import bcrypt
 from aiohttp import web
@@ -48,12 +49,21 @@ async def get_current_user(request: web.Request) -> dict:
         raise web.HTTPUnauthorized(text="Could not validate credentials")
 
 
-async def require_admin(request: web.Request) -> dict:
-    """Like get_current_user but raises 403 if the user is not an admin."""
-    user = await get_current_user(request)
-    if user["role"] != "admin":
-        raise web.HTTPForbidden(text="Admin access required")
-    return user
+def require_admin(handler):
+    """Decorator that requires the caller to be an admin.
+
+    Validates the JWT, checks the role, attaches the resolved user dict to
+    ``request["user"]`` (so the wrapped handler can access caller info), and
+    raises 403 otherwise.
+    """
+    @functools.wraps(handler)
+    async def wrapper(request: web.Request, *args, **kwargs):
+        user = await get_current_user(request)
+        if user["role"] != "admin":
+            raise web.HTTPForbidden(text="Admin access required")
+        request["user"] = user
+        return await handler(request, *args, **kwargs)
+    return wrapper
 
 
 @routes.post("/login")
