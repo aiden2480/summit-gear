@@ -1,7 +1,9 @@
 import os
 import functools
+import uuid
 import jwt
 import bcrypt
+import uuid
 from aiohttp import web
 from datetime import datetime, timedelta, timezone
 from email_validator import validate_email, EmailNotValidError
@@ -25,24 +27,28 @@ def verify_password(plain: str, hashed: str) -> bool:
     return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 
-def create_access_token(username: str, role: str) -> str:
+def create_access_token(user_id: uuid.UUID, role: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    return jwt.encode({"sub": username, "role": role, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode({"sub": str(user_id), "role": role, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
 
 
 async def get_current_user(request: web.Request) -> dict:
-    """Extract and verify JWT from the Authorization header. Returns {"username": ..., "role": ...}."""
+    """Extract and verify JWT from the Authorization header. Returns {"user_id": ..., "role": ...}."""
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
         raise web.HTTPUnauthorized(text="Missing or invalid authorization header")
     token = auth_header[7:]
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")
+        user_id = payload.get("sub")
         role = payload.get("role", "user")
-        if not username:
+        if not user_id:
             raise web.HTTPUnauthorized(text="Invalid token payload")
-        return {"username": username, "role": role}
+        try:
+            parsed_user_id = uuid.UUID(user_id)
+        except ValueError:
+            raise web.HTTPUnauthorized(text="Invalid token payload")
+        return {"user_id": parsed_user_id, "role": role}
     except jwt.ExpiredSignatureError:
         raise web.HTTPUnauthorized(text="Token has expired")
     except jwt.PyJWTError:
@@ -87,7 +93,7 @@ async def login(request: web.Request) -> web.Response:
     if not user or not verify_password(password, user.hashed_password):
         return web.json_response({"error": "Invalid credentials"}, status=401)
 
-    token = create_access_token(user.username, user.role)
+    token = create_access_token(user.id, user.role)
     return web.json_response({"user": user.username, "token": token, "role": user.role})
 
 
@@ -117,5 +123,5 @@ async def register(request: web.Request) -> web.Response:
         session.add(new_user)
         await session.commit()
 
-    token = create_access_token(username, "user")
+    token = create_access_token(new_user.id, "user")
     return web.json_response({"user": username, "token": token, "role": "user"}, status=201)

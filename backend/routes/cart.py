@@ -10,9 +10,9 @@ routes = web.RouteTableDef()
 @routes.get("/api/cart")
 async def get_cart(request : web.Request):
     async with get_session() as session:
-        username = (await get_current_user(request)).get("username", "");
+        user_id = (await get_current_user(request)).get("user_id", "")
         result = await session.execute(
-            select(CartItem).where(CartItem.username == username).options(joinedload(CartItem.product)).order_by(CartItem.id)
+            select(CartItem).where(CartItem.user_id == user_id).options(joinedload(CartItem.product)).order_by(CartItem.id)
         )
         items = result.unique().scalars().all()
 
@@ -31,9 +31,8 @@ async def add_to_cart(request : web.Request):
         raise web.HTTPBadRequest(text="Quantity must be at least 1")
 
     async with get_session() as session:
-        # Get product
         result = await session.execute(select(Product).where(Product.id == product_id))
-        current_user_username = (await get_current_user(request)).get("username", "")
+        current_user_id = (await get_current_user(request)).get("user_id", "")
         product = result.scalar()
         if not product:
             raise web.HTTPNotFound(text="Product not found")
@@ -42,7 +41,7 @@ async def add_to_cart(request : web.Request):
             raise web.HTTPBadRequest(text="Not enough stock available")
 
         # Check if product already in cart
-        query = select(CartItem).where(CartItem.product_id == product_id, CartItem.username == current_user_username)
+        query = select(CartItem).where(CartItem.product_id == product_id, CartItem.user_id == current_user_id)
         result = await session.execute(query)
         existing = result.scalar()
 
@@ -52,7 +51,7 @@ async def add_to_cart(request : web.Request):
                 raise web.HTTPBadRequest(text="Not enough stock available")
             existing.quantity = new_qty
         else:
-            cart_item = CartItem(product_id=product_id, quantity=quantity, username=current_user_username)
+            cart_item = CartItem(product_id=product_id, quantity=quantity, user_id=current_user_id)
             session.add(cart_item)
 
         await session.commit()
@@ -60,7 +59,7 @@ async def add_to_cart(request : web.Request):
         # Fetch updated item with product relationship
         result = await session.execute(
             select(CartItem)
-            .where(CartItem.product_id == product_id, CartItem.username == current_user_username)
+            .where(CartItem.product_id == product_id, CartItem.user_id == current_user_id)
             .options(joinedload(CartItem.product))
         )
         item = result.unique().scalar()
@@ -80,10 +79,10 @@ async def update_cart_item(request : web.Request):
         raise web.HTTPBadRequest(text="Quantity must be at least 1")
 
     async with get_session() as session:
-        current_user_username = (await get_current_user(request)).get("username", "")
+        current_user_id = (await get_current_user(request)).get("user_id", "")
         result = await session.execute(
             select(CartItem)
-            .where(CartItem.id == item_id, CartItem.username == current_user_username)
+            .where(CartItem.id == item_id, CartItem.user_id == current_user_id)
             .options(joinedload(CartItem.product))
         )
         item = result.unique().scalar()
@@ -106,14 +105,14 @@ async def remove_from_cart(request : web.Request):
     item_id = int(request.match_info["id"])
     
     async with get_session() as session:
-        current_user_username = (await get_current_user(request)).get("username", "")
-        result = await session.execute(select(CartItem).where(CartItem.id == item_id, CartItem.username == current_user_username))
+        current_user_id = (await get_current_user(request)).get("user_id", "")
+        result = await session.execute(select(CartItem).where(CartItem.id == item_id, CartItem.user_id == current_user_id))
         item = result.scalar()
 
         if not item:
             raise web.HTTPNotFound(text="Cart item not found")
 
-        statement = delete(CartItem).where(CartItem.id == item_id, CartItem.username == current_user_username)
+        statement = delete(CartItem).where(CartItem.id == item_id, CartItem.user_id == current_user_id)
         await session.execute(statement);
         await session.commit()
 
@@ -123,8 +122,8 @@ async def remove_from_cart(request : web.Request):
 @routes.delete("/api/cart")
 async def clear_cart(request : web.Request):
     async with get_session() as session:
-        current_user_username = (await get_current_user(request)).get("username", "")
-        statement = delete(CartItem).where(CartItem.username == current_user_username)
+        current_user_id = (await get_current_user(request)).get("user_id", "")
+        statement = delete(CartItem).where(CartItem.user_id == current_user_id)
         await session.execute(statement)
         await session.commit()
 
@@ -136,31 +135,28 @@ async def checkout(request : web.Request):
     """Atomically validates stock, reduces quantities, and clears the cart."""
 
     async with get_session() as session:
-        current_user_username = (await get_current_user(request)).get("username", "")
-        # Get all cart items
-        result = await session.execute(select(CartItem).where(CartItem.username == current_user_username).options(joinedload(CartItem.product)))
+        current_user_id = (await get_current_user(request)).get("user_id", "")
+        result = await session.execute(select(CartItem).where(CartItem.user_id == current_user_id).options(joinedload(CartItem.product)))
         items = result.unique().scalars().all()
 
         if not items:
             raise web.HTTPBadRequest(text="Cart is empty")
 
-        # Reduce stock for each item and validate availability
         for item in items:
             if item.product.stock < item.quantity:
                 raise web.HTTPBadRequest(text=f"Not enough stock for {item.product.name}")
             item.product.stock -= item.quantity
 
-        # Clear cart
-        statement = delete(CartItem).where(CartItem.username == current_user_username);
+        statement = delete(CartItem).where(CartItem.user_id == current_user_id);
         await session.execute(statement)
         await session.commit()
 
     return web.json_response({"status": "success", "message": "Order placed successfully"})
 
-@routes.get("/api/cart/user/{username}")
+@routes.get("/api/cart/user/{user_id}")
 async def getUserCart(request : web.Request) -> web.Response:
     async with get_session() as session:
-        cartitem_user = str(request.match_info["username"])
+        cartitem_user_id = str(request.match_info["user_id"])
 
         role = (await get_current_user(request)).get("role", "");
 
@@ -168,7 +164,7 @@ async def getUserCart(request : web.Request) -> web.Response:
             raise web.HTTPUnauthorized(text="You are not authorised to perform this action.");
 
         result = await session.execute(
-            select(CartItem).where(CartItem.username == cartitem_user).options(joinedload(CartItem.product)).order_by(CartItem.id)
+            select(CartItem).where(CartItem.user_id == cartitem_user_id).options(joinedload(CartItem.product)).order_by(CartItem.id)
         )
         items = result.unique().scalars().all()
 
