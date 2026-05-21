@@ -1,5 +1,6 @@
 from aiohttp import web
 from sqlmodel import select
+from email_validator import validate_email, EmailNotValidError
 from database import get_session
 from database.models import User
 from routes.auth import get_current_user, require_admin, hash_password
@@ -17,22 +18,19 @@ async def get_all_users(request: web.Request) -> web.Response:
         return web.json_response([item.to_dict() for item in items])
 
 
-@routes.put("/api/users/{username}")
+@routes.put("/api/users/{user_id}")
 async def update_user(request: web.Request) -> web.Response:
-    target_username = request.match_info["username"]
+    target_user_id = request.match_info["user_id"]
     caller = await get_current_user(request)
 
     is_admin = caller["role"] == "admin"
-    is_self = caller["username"] == target_username
+    is_self = str(caller["user_id"]) == target_user_id
 
     if not is_admin and not is_self:
         raise web.HTTPForbidden(text="You can only edit your own account")
 
     data = await request.json()
-
-    if "username" in data:
-        return web.json_response({"error": "Username changes are not supported"}, status=400)
-
+    new_email = data.get("email")
     new_password = data.get("password")
     new_role = data.get("role")
 
@@ -48,15 +46,29 @@ async def update_user(request: web.Request) -> web.Response:
     if new_password is not None and len(new_password) < 8:
         return web.json_response({"error": "Password must be at least 8 characters"}, status=400)
 
-    if new_password is None and new_role is None:
+    if new_email is not None:
+        new_email = new_email.strip()
+        try:
+            valid = validate_email(new_email, check_deliverability=False)
+            new_email = valid.normalized
+        except EmailNotValidError as e:
+            return web.json_response({"error": f"Invalid email address: {e}"}, status=400)
+
+    if new_email is None and new_password is None and new_role is None:
         return web.json_response({"error": "No changes provided"}, status=400)
 
     async with get_session() as session:
-        result = await session.execute(select(User).where(User.username == target_username))
+        result = await session.execute(select(User).where(User.id == target_user_id))
         user = result.scalars().first()
 
         if not user:
             raise web.HTTPNotFound(text="User not found")
+
+        if new_email is not None and new_email != user.username:
+            existing = await session.execute(select(User).where(User.username == new_email))
+            if existing.scalars().first():
+                return web.json_response({"error": "Email already in use"}, status=409)
+            user.username = new_email
 
         if new_password is not None:
             user.hashed_password = hash_password(new_password)
@@ -71,17 +83,17 @@ async def update_user(request: web.Request) -> web.Response:
         return web.json_response(user.to_dict())
 
 
-@routes.delete("/api/users/{username}")
+@routes.delete("/api/users/{user_id}")
 @require_admin
 async def delete_user(request: web.Request) -> web.Response:
-    caller = request["user"]
-    target_username = request.match_info["username"]
+    caller = await get_current_user(request)
+    target_user_id = request.match_info["user_id"]
 
-    if caller["username"] == target_username:
+    if str(caller["user_id"]) == target_user_id:
         return web.json_response({"error": "Admins cannot delete their own account"}, status=400)
 
     async with get_session() as session:
-        result = await session.execute(select(User).where(User.username == target_username))
+        result = await session.execute(select(User).where(User.id == target_user_id))
         user = result.scalars().first()
 
         if not user:
