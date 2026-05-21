@@ -24,7 +24,7 @@ const Register = () => {
         });
         if (response.ok) {
           const data = await response.json();
-          login(data.user, data.token, data.role);
+          login(data.user, data.token, data.role, data.id);
           navigate('/', { replace: true });
         } else {
           const err = await response.json();

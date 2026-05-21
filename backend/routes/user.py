@@ -1,3 +1,4 @@
+import uuid
 from aiohttp import web
 from sqlmodel import select
 from email_validator import validate_email, EmailNotValidError
@@ -57,8 +58,13 @@ async def update_user(request: web.Request) -> web.Response:
     if new_email is None and new_password is None and new_role is None:
         return web.json_response({"error": "No changes provided"}, status=400)
 
+    try:
+        target_uuid = uuid.UUID(target_user_id)
+    except ValueError:
+        raise web.HTTPBadRequest(text="Invalid user ID")
+
     async with get_session() as session:
-        result = await session.execute(select(User).where(User.id == target_user_id))
+        result = await session.execute(select(User).where(User.id == target_uuid))
         user = result.scalars().first()
 
         if not user:
@@ -92,8 +98,13 @@ async def delete_user(request: web.Request) -> web.Response:
     if str(caller["user_id"]) == target_user_id:
         return web.json_response({"error": "Admins cannot delete their own account"}, status=400)
 
+    try:
+        target_uuid = uuid.UUID(target_user_id)
+    except ValueError:
+        raise web.HTTPBadRequest(text="Invalid user ID")
+
     async with get_session() as session:
-        result = await session.execute(select(User).where(User.id == target_user_id))
+        result = await session.execute(select(User).where(User.id == target_uuid))
         user = result.scalars().first()
 
         if not user:

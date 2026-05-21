@@ -57,15 +57,16 @@ export const categoryApi = {
 };
 
 export interface UpdateUserPayload {
+  email?: string;
   password?: string;
   role?: "user" | "admin";
 }
 
 export const userApi = {
   getAll: (token : string | null = null) => get<User[]>("/users", token),
-  getCart: (username : string, token: string | null = null) => get<CartItem[]>(`/cart/user/${username}`, token),
-  update: (username: string, payload: UpdateUserPayload, token: string | null = null) =>
-    put<User>(`/users/${encodeURIComponent(username)}`, payload, token),
-  delete: (username: string, token: string | null = null) =>
-    del<{ message: string }>(`/users/${encodeURIComponent(username)}`, token),
+  getCart: (userId: string, token: string | null = null) => get<CartItem[]>(`/cart/user/${userId}`, token),
+  update: (userId: string, payload: UpdateUserPayload, token: string | null = null) =>
+    put<User>(`/users/${userId}`, payload, token),
+  delete: (userId: string, token: string | null = null) =>
+    del<{ message: string }>(`/users/${userId}`, token),
 }

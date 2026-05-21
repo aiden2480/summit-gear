@@ -56,7 +56,7 @@ export default function UserGrid({ onViewCart, addToast }: UserGridProps) {
     if (!deleting) return;
     setDeleteBusy(true);
     try {
-      await userApi.delete(deleting.username, auth.token);
+      await userApi.delete(deleting.id, auth.token);
       addToast(`Deleted ${deleting.username}`, "success");
       setDeleting(null);
       await fetchUsers();

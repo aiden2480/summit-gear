@@ -52,7 +52,7 @@ export default function UserCard({ user, onEdit, onDelete, openCart }: UserCardP
             type="button"
             className="btn btn--info btn--small"
             onClick={() => {
-              openCart(user.username);
+              openCart(user.id);
             }}
           >
             View Cart

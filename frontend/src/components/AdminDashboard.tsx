@@ -25,11 +25,11 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
     return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cartItems]);
 
-  const handleViewCart = async (username: string) => {
+  const handleViewCart = async (userId: string) => {
     try {
-      const userCart = await userApi.getCart(username, auth.token);
+      const userCart = await userApi.getCart(userId, auth.token);
       setCartItems(userCart);
-      setSelectedUsername(username);
+      setSelectedUsername(userId);
       setCartOpen(true);
     } catch (error: unknown) {
       addToast(error instanceof Error ? error.message : "Failed to load user cart", "error");
@@ -60,9 +60,9 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
           selectedUsername={selectedUsername}
           addToast={addToast}
         />
-        {profileOpen && auth.user && (
+      {profileOpen && auth.user && auth.userId && (
           <EditUserModal
-            user={{ id: 0, username: auth.user, role: (auth.role as "admin" | "user") ?? "admin" }}
+            user={{ id: auth.userId, username: auth.user, role: (auth.role as "admin" | "user") ?? "admin" }}
             mode="self"
             onClose={() => setProfileOpen(false)}
             onSaved={() => setProfileOpen(false)}

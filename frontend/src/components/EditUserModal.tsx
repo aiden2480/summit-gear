@@ -15,7 +15,8 @@ interface EditUserModalProps {
 }
 
 export default function EditUserModal({ user, mode, onClose, onSaved, addToast }: EditUserModalProps) {
-  const { auth } = useAuth();
+  const { auth, login } = useAuth();
+  const [email, setEmail] = useState(user.username);
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"user" | "admin">(user.role);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +29,11 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
     e.preventDefault();
     setError(null);
 
-    const payload: { password?: string; role?: "user" | "admin" } = {};
+    const payload: { email?: string; password?: string; role?: "user" | "admin" } = {};
+
+    if (email.trim() !== user.username) {
+      payload.email = email.trim();
+    }
 
     if (password.length > 0) {
       if (password.length < 8) {
@@ -49,8 +54,11 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
 
     setSubmitting(true);
     try {
-      const updated = await userApi.update(user.username, payload, auth.token);
+      const updated = await userApi.update(user.id, payload, auth.token);
       addToast("User updated successfully", "success");
+      if (isSelfTarget && updated.username !== auth.user) {
+        login(updated.username, auth.token!, auth.role!, user.id);
+      }
       onSaved(updated);
       onClose();
     } catch (e: unknown) {
@@ -72,14 +80,15 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
         </p>
 
         <form className="modal__form" onSubmit={handleSubmit}>
-          <div className="modal__field modal__field--readonly">
-            <label htmlFor="edit-user-username">Email</label>
+          <div className="modal__field">
+            <label htmlFor="edit-user-email">Email</label>
             <input
-              id="edit-user-username"
+              id="edit-user-email"
               type="email"
-              value={user.username}
-              readOnly
-              disabled
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
             />
           </div>
 

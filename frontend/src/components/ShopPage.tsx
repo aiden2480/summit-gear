@@ -77,9 +77,9 @@ export default function ShopPage({ logoutFunc } : ShopPageProps) {
         addToast={addToast}
       />
 
-      {profileOpen && auth.user && (
+      {profileOpen && auth.user && auth.userId && (
         <EditUserModal
-          user={{ id: 0, username: auth.user, role: (auth.role as "admin" | "user") ?? "user" }}
+          user={{ id: auth.userId, username: auth.user, role: (auth.role as "admin" | "user") ?? "user" }}
           mode="self"
           onClose={() => setProfileOpen(false)}
           onSaved={() => setProfileOpen(false)}

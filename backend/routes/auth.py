@@ -94,7 +94,7 @@ async def login(request: web.Request) -> web.Response:
         return web.json_response({"error": "Invalid credentials"}, status=401)
 
     token = create_access_token(user.id, user.role)
-    return web.json_response({"user": user.username, "token": token, "role": user.role})
+    return web.json_response({"id": str(user.id), "user": user.username, "token": token, "role": user.role})
 
 
 @routes.post("/register")
@@ -124,4 +124,4 @@ async def register(request: web.Request) -> web.Response:
         await session.commit()
 
     token = create_access_token(new_user.id, "user")
-    return web.json_response({"user": username, "token": token, "role": "user"}, status=201)
+    return web.json_response({"id": str(new_user.id), "user": username, "token": token, "role": "user"}, status=201)
