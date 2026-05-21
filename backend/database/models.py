@@ -1,21 +1,22 @@
-from typing import List, Optional
+import uuid
+from typing import List
 from sqlmodel import SQLModel, Field, Relationship
 
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, nullable=False)
     username: str = Field(unique=True, index=True)
     hashed_password: str
-    role: str = Field(default="user")  # "user" or "admin"
+    role: str = Field(default="user")
     cart: List["CartItem"] = Relationship(back_populates="user", cascade_delete=True)
-    
-    def to_dict(self): 
+
+    def to_dict(self):
         return {
-            "id" : self.id,
-            "username" : self.username,
-            "role" : self.role
+            "id": str(self.id),
+            "username": self.username,
+            "role": self.role,
         }
 
 class Product(SQLModel, table=True):
@@ -47,7 +48,7 @@ class CartItem(SQLModel, table=True):
 
     id: int = Field(default=None, primary_key=True)
     product_id: int = Field(foreign_key="products.id")
-    username: str = Field(foreign_key="users.username")
+    user_id: uuid.UUID = Field(foreign_key="users.id")
     quantity: int = 1
     product: Product = Relationship(back_populates="cart_items")
     user: User = Relationship(back_populates="cart")
@@ -61,5 +62,5 @@ class CartItem(SQLModel, table=True):
             "price": self.product.price,
             "image_url": self.product.image_url,
             "stock": self.product.stock,
-            "user_id": self.username
+            "user_id": str(self.user_id),
         }
