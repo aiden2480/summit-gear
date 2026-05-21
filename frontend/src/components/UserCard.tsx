@@ -4,8 +4,8 @@ import type { User } from "../types";
 
 interface UserCardProps {
   user: User;
-  onEdit: (username: string) => void;
-  onDelete: (username: string) => void;
+  onEdit?: (username: string) => void;
+  onDelete?: (username: string) => void;
   openCart: (username: string) => void;
 }
 

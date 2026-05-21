@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import CartDrawer from "./CartDrawer";
 import Header from "./Header";
 import UserGrid from "./UserGrid";
+import EditUserModal from "./EditUserModal";
 import Toast from "./Toast";
 import useToast from "../hooks/useToast";
 import { userApi } from "../services/api";
@@ -16,6 +17,7 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
   const [cartOpen, setCartOpen] = useState<boolean>(false);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedUsername, setSelectedUsername] = useState<string | null>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
   const { toasts, addToast } = useToast();
   const { auth } = useAuth();
 
@@ -42,9 +44,14 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
 
   return (
     <div>
-      <Header onLogout={logoutFunc} cartCount={0} onCartClick={() => {}} />
+      <Header
+        onLogout={logoutFunc}
+        cartCount={0}
+        onCartClick={() => {}}
+        onProfileClick={() => setProfileOpen(true)}
+      />
       <main style={{ padding: "2rem" }}>
-        <UserGrid onViewCart={handleViewCart} />
+        <UserGrid onViewCart={handleViewCart} addToast={addToast} />
         <CartDrawer
           open={cartOpen}
           cartItems={cartItems}
@@ -53,6 +60,15 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
           selectedUsername={selectedUsername}
           addToast={addToast}
         />
+        {profileOpen && auth.user && (
+          <EditUserModal
+            user={{ id: 0, username: auth.user, role: (auth.role as "admin" | "user") ?? "admin" }}
+            mode="self"
+            onClose={() => setProfileOpen(false)}
+            onSaved={() => setProfileOpen(false)}
+            addToast={addToast}
+          />
+        )}
       <Toast toasts={toasts} />
       </main>
     </div>
