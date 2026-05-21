@@ -6,7 +6,9 @@ from sqlalchemy import CheckConstraint
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
-    __table_args__ = (CheckConstraint("role IN ('user', 'admin')"))
+    __table_args__ = (
+        CheckConstraint("role IN ('user', 'admin')"),
+    )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, nullable=False)
     username: str = Field(unique=True, index=True)
