@@ -65,7 +65,9 @@ export interface UpdateUserPayload {
 export const userApi = {
   getAll: (token : string | null = null) => get<User[]>("/users", token),
   getCart: (userId: string, token: string | null = null) => get<CartItem[]>(`/cart/user/${userId}`, token),
-  update: (userId: string, payload: UpdateUserPayload, token: string | null = null) =>
+  updateSelf: (payload: UpdateUserPayload, token: string | null = null) =>
+    put<User>("/users/me", payload, token),
+  updateUser: (userId: string, payload: UpdateUserPayload, token: string | null = null) =>
     put<User>(`/users/${userId}`, payload, token),
   delete: (userId: string, token: string | null = null) =>
     del<{ message: string }>(`/users/${userId}`, token),

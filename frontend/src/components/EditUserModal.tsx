@@ -55,7 +55,9 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
 
     setSubmitting(true);
     try {
-      const updated = await userApi.update(user.id, payload, auth.token);
+      const updated = mode === "self"
+        ? await userApi.updateSelf(payload, auth.token)
+        : await userApi.updateUser(user.id, payload, auth.token);
       addToast("User updated successfully", "success");
       if (isSelfTarget && updated.username !== auth.user) {
         login(updated.username, auth.token!, updated.role, updated.id);
