@@ -152,9 +152,9 @@ def _sniff_mime(data: bytes) -> Optional[str]:
     return None
 
 
-async def _read_avatar_upload(request: web.Request) -> bytes:
+async def _read_avatar_upload(request: web.Request) -> tuple[bytes, str]:
     """Parse a multipart upload, validate type + magic bytes + size.
-    Returns the validated image bytes or raises an HTTP error response."""
+    Returns (data, mime) or raises an HTTP error response."""
     try:
         reader = await request.multipart()
     except Exception:
@@ -188,16 +188,17 @@ async def _read_avatar_upload(request: web.Request) -> bytes:
     if sniffed is None or sniffed != declared_mime:
         raise web.HTTPBadRequest(text="File contents do not match a PNG or JPEG image")
 
-    return bytes(buf)
+    return bytes(buf), sniffed
 
 
-async def _persist_avatar(target_uuid: uuid.UUID, data: bytes) -> web.Response:
+async def _persist_avatar(target_uuid: uuid.UUID, data: bytes, mime: str) -> web.Response:
     async with get_session() as session:
         result = await session.execute(select(User).where(User.id == target_uuid))
         user = result.scalars().first()
         if not user:
             raise web.HTTPNotFound(text="User not found")
-        user.avatar_blob = data
+        user.avatar_data = data
+        user.avatar_mime = mime
         session.add(user)
         await session.commit()
         await session.refresh(user)
@@ -210,7 +211,8 @@ async def _clear_avatar(target_uuid: uuid.UUID) -> web.Response:
         user = result.scalars().first()
         if not user:
             raise web.HTTPNotFound(text="User not found")
-        user.avatar_blob = None
+        user.avatar_data = None
+        user.avatar_mime = None
         session.add(user)
         await session.commit()
         await session.refresh(user)
@@ -220,8 +222,8 @@ async def _clear_avatar(target_uuid: uuid.UUID) -> web.Response:
 @routes.put("/api/users/me/avatar")
 async def upload_self_avatar(request: web.Request) -> web.Response:
     caller = await get_current_user(request)
-    data = await _read_avatar_upload(request)
-    return await _persist_avatar(caller["user_id"], data)
+    data, mime = await _read_avatar_upload(request)
+    return await _persist_avatar(caller["user_id"], data, mime)
 
 
 @routes.delete("/api/users/me/avatar")
@@ -234,8 +236,8 @@ async def delete_self_avatar(request: web.Request) -> web.Response:
 @require_admin
 async def upload_user_avatar(request: web.Request) -> web.Response:
     target_uuid = try_parse_uuid(request.match_info["user_id"])
-    data = await _read_avatar_upload(request)
-    return await _persist_avatar(target_uuid, data)
+    data, mime = await _read_avatar_upload(request)
+    return await _persist_avatar(target_uuid, data, mime)
 
 
 @routes.delete("/api/users/{user_id}/avatar")

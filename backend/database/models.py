@@ -5,37 +5,28 @@ from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import CheckConstraint, LargeBinary, Column
 
 
-_PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
-_JPEG_MAGIC = b"\xff\xd8\xff"
-
-
-def _sniff_avatar_mime(data: bytes) -> Optional[str]:
-    if data.startswith(_PNG_MAGIC):
-        return "image/png"
-    if data.startswith(_JPEG_MAGIC):
-        return "image/jpeg"
-    return None
-
-
 class User(SQLModel, table=True):
     __tablename__ = "users"
     __table_args__ = (
         CheckConstraint("role IN ('user', 'admin')", name="ck_users_role"),
+        CheckConstraint("avatar_mime IN ('image/png', 'image/jpeg')", name="ck_users_avatar_mime"),
+        CheckConstraint("(avatar_data IS NULL) = (avatar_mime IS NULL)", name="ck_users_avatar_both_or_neither"),
     )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, nullable=False)
     username: str = Field(unique=True, index=True)
     hashed_password: str
     role: str = Field(default="user")
-    avatar_blob: Optional[bytes] = Field(default=None, sa_column=Column(LargeBinary, nullable=True))
+    avatar_data: Optional[bytes] = Field(default=None, sa_column=Column(LargeBinary, nullable=True))
+    avatar_mime: Optional[str] = Field(default=None, nullable=True)
     cart: List["CartItem"] = Relationship(back_populates="user", cascade_delete=True)
 
     @property
     def avatar(self) -> Optional[str]:
-        if not self.avatar_blob:
+        if not self.avatar_data or not self.avatar_mime:
             return None
-        mime = _sniff_avatar_mime(self.avatar_blob) or "application/octet-stream"
-        return f"data:{mime};base64,{base64.b64encode(self.avatar_blob).decode('ascii')}"
+
+        return f"data:{self.avatar_mime};base64,{base64.b64encode(self.avatar_data).decode('ascii')}"
 
     def to_dict(self):
         return {
