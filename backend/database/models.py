@@ -1,10 +1,14 @@
 import uuid
 from typing import List
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import CheckConstraint
 
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
+    __table_args__ = (
+        CheckConstraint("role IN ('user', 'admin')", name="ck_users_role"),
+    )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, nullable=False)
     username: str = Field(unique=True, index=True)

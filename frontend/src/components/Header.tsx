@@ -5,9 +5,10 @@ interface HeaderProps {
   cartCount: number;
   onCartClick: () => void;
   onLogout: () => void;
+  onProfileClick?: () => void;
 }
 
-export default function Header({ cartCount, onCartClick, onLogout }: HeaderProps) {
+export default function Header({ cartCount, onCartClick, onLogout, onProfileClick }: HeaderProps) {
   const { auth } = useAuth();
 
   return (
@@ -26,6 +27,11 @@ export default function Header({ cartCount, onCartClick, onLogout }: HeaderProps
               {auth.role === "admin" && <span className="header__admin-badge">Admin</span>}
             </span>
           }
+          {auth.user && onProfileClick && (
+            <button className="btn btn--logout" onClick={onProfileClick} aria-label="Edit profile">
+              Profile
+            </button>
+          )}
           {auth.role !== 'admin' &&  
             <button className="btn btn--cart" onClick={onCartClick} aria-label={`Shopping cart with ${cartCount} items`}>
               <span className="btn__cart-icon" aria-hidden="true">

@@ -56,7 +56,19 @@ export const categoryApi = {
   getAll: () => get<string[]>("/categories"),
 };
 
+export interface UpdateUserPayload {
+  email?: string;
+  password?: string;
+  role?: "user" | "admin";
+}
+
 export const userApi = {
   getAll: (token : string | null = null) => get<User[]>("/users", token),
-  getCart: (username : string, token: string | null = null) => get<CartItem[]>(`/cart/user/${username}`, token),
+  getCart: (userId: string, token: string | null = null) => get<CartItem[]>(`/cart/user/${userId}`, token),
+  updateSelf: (payload: UpdateUserPayload, token: string | null = null) =>
+    put<User>("/users/me", payload, token),
+  updateUser: (userId: string, payload: UpdateUserPayload, token: string | null = null) =>
+    put<User>(`/users/${userId}`, payload, token),
+  delete: (userId: string, token: string | null = null) =>
+    del<{ message: string }>(`/users/${userId}`, token),
 }
