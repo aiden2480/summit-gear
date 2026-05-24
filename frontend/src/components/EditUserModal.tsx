@@ -29,10 +29,11 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
     e.preventDefault();
     setError(null);
 
+    const trimmedEmail = email.trim();
     const payload: { email?: string; password?: string; role?: "user" | "admin" } = {};
 
-    if (email.trim() !== user.username) {
-      payload.email = email.trim();
+    if (trimmedEmail !== user.username) {
+      payload.email = trimmedEmail;
     }
 
     if (password.length > 0) {
@@ -57,7 +58,7 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
       const updated = await userApi.update(user.id, payload, auth.token);
       addToast("User updated successfully", "success");
       if (isSelfTarget && updated.username !== auth.user) {
-        login(updated.username, auth.token!, auth.role!, user.id);
+        login(updated.username, auth.token!, updated.role, updated.id);
       }
       onSaved(updated);
       onClose();

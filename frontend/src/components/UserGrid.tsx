@@ -2,13 +2,13 @@ import Grid from "./Grid";
 import UserCard from "./UserCard";
 import EditUserModal from "./EditUserModal";
 import ConfirmDialog from "./ConfirmDialog";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { userApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import type { User, ToastType } from "../types";
 
 interface UserGridProps {
-  onViewCart: (username: string) => Promise<void>;
+  onViewCart: (user: User) => Promise<void>;
   addToast: (message: string, type?: ToastType) => void;
 }
 
@@ -21,7 +21,7 @@ export default function UserGrid({ onViewCart, addToast }: UserGridProps) {
   const [deleteBusy, setDeleteBusy] = useState(false);
   const { auth } = useAuth();
 
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -35,20 +35,19 @@ export default function UserGrid({ onViewCart, addToast }: UserGridProps) {
     finally {
       setLoading(false);
     }
-  }
+  }, [auth.token]);
 
   useEffect(() => {
     fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.token]);
+  }, [fetchUsers]);
 
-  function handleEditUser(username: string) {
-    const user = users.find((u) => u.username === username);
+  function handleEditUser(userId: string) {
+    const user = users.find((u) => u.id === userId);
     if (user) setEditing(user);
   }
 
-  function handleDeleteUser(username: string) {
-    const user = users.find((u) => u.username === username);
+  function handleDeleteUser(userId: string) {
+    const user = users.find((u) => u.id === userId);
     if (user) setDeleting(user);
   }
 
@@ -69,7 +68,7 @@ export default function UserGrid({ onViewCart, addToast }: UserGridProps) {
   }
 
   function handleSaved(updated: User) {
-    setUsers((prev) => prev.map((u) => (u.username === updated.username ? updated : u)));
+    setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
   }
 
   return (
@@ -82,11 +81,11 @@ export default function UserGrid({ onViewCart, addToast }: UserGridProps) {
         emptyDescription="No users have been created yet."
       >
         {users.map((user, index) => (
-          <div key={user.username} style={{ animationDelay: `${index * 0.05}s` }}>
+          <div key={user.id} style={{ animationDelay: `${index * 0.05}s` }}>
             <UserCard
               user={user}
               onEdit={handleEditUser}
-              onDelete={user.username === auth.user ? undefined : handleDeleteUser}
+              onDelete={user.id === auth.userId ? undefined : handleDeleteUser}
               openCart={onViewCart}
             />
           </div>

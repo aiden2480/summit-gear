@@ -4,9 +4,9 @@ import type { User } from "../types";
 
 interface UserCardProps {
   user: User;
-  onEdit?: (username: string) => void;
-  onDelete?: (username: string) => void;
-  openCart: (username: string) => void;
+  onEdit?: (userId: string) => void;
+  onDelete?: (userId: string) => void;
+  openCart: (user: User) => void;
 }
 
 
@@ -28,7 +28,7 @@ export default function UserCard({ user, onEdit, onDelete, openCart }: UserCardP
             type="button"
             className="btn btn--success btn--small"
             onClick={() => {
-              onEdit(user.username);
+              onEdit(user.id);
             }}
             aria-label={`Edit ${user.username}`}
           >
@@ -40,7 +40,7 @@ export default function UserCard({ user, onEdit, onDelete, openCart }: UserCardP
             type="button"
             className="btn btn--danger btn--small"
             onClick={() => {
-              onDelete(user.username);
+              onDelete(user.id);
             }}
             aria-label={`Delete ${user.username}`}
           >
@@ -52,7 +52,7 @@ export default function UserCard({ user, onEdit, onDelete, openCart }: UserCardP
             type="button"
             className="btn btn--info btn--small"
             onClick={() => {
-              openCart(user.id);
+              openCart(user);
             }}
           >
             View Cart

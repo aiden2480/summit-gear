@@ -3,7 +3,6 @@ import functools
 import uuid
 import jwt
 import bcrypt
-import uuid
 from aiohttp import web
 from datetime import datetime, timedelta, timezone
 from email_validator import validate_email, EmailNotValidError

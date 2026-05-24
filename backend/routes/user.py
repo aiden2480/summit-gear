@@ -1,6 +1,8 @@
+import json
 import uuid
 from aiohttp import web
 from sqlmodel import select
+from sqlalchemy import func
 from email_validator import validate_email, EmailNotValidError
 from database import get_session
 from database.models import User
@@ -14,7 +16,7 @@ routes = web.RouteTableDef()
 @require_admin
 async def get_all_users(request: web.Request) -> web.Response:
     async with get_session() as session:
-        result = await session.execute(select(User).order_by(User.id))
+        result = await session.execute(select(User).order_by(User.username))
         items = result.scalars().all()
         return web.json_response([item.to_dict() for item in items])
 
@@ -30,7 +32,11 @@ async def update_user(request: web.Request) -> web.Response:
     if not is_admin and not is_self:
         raise web.HTTPForbidden(text="You can only edit your own account")
 
-    data = await request.json()
+    try:
+        data = await request.json()
+    except (json.JSONDecodeError, ValueError):
+        raise web.HTTPBadRequest(text="Invalid JSON body")
+
     new_email = data.get("email")
     new_password = data.get("password")
     new_role = data.get("role")
@@ -70,8 +76,10 @@ async def update_user(request: web.Request) -> web.Response:
         if not user:
             raise web.HTTPNotFound(text="User not found")
 
-        if new_email is not None and new_email != user.username:
-            existing = await session.execute(select(User).where(User.username == new_email))
+        if new_email is not None and new_email.lower() != user.username.lower():
+            existing = await session.execute(
+                select(User).where(func.lower(User.username) == new_email.lower())
+            )
             if existing.scalars().first():
                 return web.json_response({"error": "Email already in use"}, status=409)
             user.username = new_email

@@ -7,7 +7,7 @@ import Toast from "./Toast";
 import useToast from "../hooks/useToast";
 import { userApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import type { CartItem } from "../types";
+import type { CartItem, User } from "../types";
 
 interface AdminDashboardProps {
   logoutFunc: () => void;
@@ -25,11 +25,11 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
     return cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   }, [cartItems]);
 
-  const handleViewCart = async (userId: string) => {
+  const handleViewCart = async (user: User) => {
     try {
-      const userCart = await userApi.getCart(userId, auth.token);
+      const userCart = await userApi.getCart(user.id, auth.token);
       setCartItems(userCart);
-      setSelectedUsername(userId);
+      setSelectedUsername(user.username);
       setCartOpen(true);
     } catch (error: unknown) {
       addToast(error instanceof Error ? error.message : "Failed to load user cart", "error");
@@ -60,9 +60,9 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
           selectedUsername={selectedUsername}
           addToast={addToast}
         />
-      {profileOpen && auth.user && auth.userId && (
+      {profileOpen && auth.user && auth.userId && auth.role && (
           <EditUserModal
-            user={{ id: auth.userId, username: auth.user, role: (auth.role as "admin" | "user") ?? "admin" }}
+            user={{ id: auth.userId, username: auth.user, role: auth.role as "admin" | "user" }}
             mode="self"
             onClose={() => setProfileOpen(false)}
             onSaved={() => setProfileOpen(false)}
