@@ -1,14 +1,15 @@
 import os
+import functools
 import uuid
 import jwt
 import bcrypt
-import uuid
 from aiohttp import web
 from datetime import datetime, timedelta, timezone
 from email_validator import validate_email, EmailNotValidError
 from sqlmodel import select
 from database import get_session
 from database.models import User
+from routes.helpers import try_parse_json_body
 
 
 routes = web.RouteTableDef()
@@ -54,17 +55,26 @@ async def get_current_user(request: web.Request) -> dict:
         raise web.HTTPUnauthorized(text="Could not validate credentials")
 
 
-async def require_admin(request: web.Request) -> dict:
-    """Like get_current_user but raises 403 if the user is not an admin."""
-    user = await get_current_user(request)
-    if user["role"] != "admin":
-        raise web.HTTPForbidden(text="Admin access required")
-    return user
+def require_admin(handler):
+    """Decorator that requires the caller to be an admin.
+
+    Validates the JWT, checks the role, attaches the resolved user dict to
+    ``request["user"]`` (so the wrapped handler can access caller info), and
+    raises 403 otherwise.
+    """
+    @functools.wraps(handler)
+    async def wrapper(request: web.Request, *args, **kwargs):
+        user = await get_current_user(request)
+        if user["role"] != "admin":
+            raise web.HTTPForbidden(text="Admin access required")
+        request["user"] = user
+        return await handler(request, *args, **kwargs)
+    return wrapper
 
 
 @routes.post("/login")
 async def login(request: web.Request) -> web.Response:
-    data = await request.json()
+    data = await try_parse_json_body(request)
     username = data.get("username", "").strip()
     password = data.get("password", "")
 
@@ -84,12 +94,12 @@ async def login(request: web.Request) -> web.Response:
         return web.json_response({"error": "Invalid credentials"}, status=401)
 
     token = create_access_token(user.id, user.role)
-    return web.json_response({"user": user.username, "token": token, "role": user.role})
+    return web.json_response({"id": str(user.id), "user": user.username, "token": token, "role": user.role})
 
 
 @routes.post("/register")
 async def register(request: web.Request) -> web.Response:
-    data = await request.json()
+    data = await try_parse_json_body(request)
     username = data.get("username", "").strip()
     password = data.get("password", "")
 
@@ -114,4 +124,4 @@ async def register(request: web.Request) -> web.Response:
         await session.commit()
 
     token = create_access_token(new_user.id, "user")
-    return web.json_response({"user": username, "token": token, "role": "user"}, status=201)
+    return web.json_response({"id": str(new_user.id), "user": username, "token": token, "role": "user"}, status=201)
