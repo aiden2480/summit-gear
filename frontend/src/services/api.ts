@@ -1,8 +1,10 @@
-import { CartItem, User } from "../types"
+import { CartItem, UpdateUserPayload, User } from "../types"
 
 const API_BASE = "http://localhost:8080/api";
 
-async function request<T>(url: string, token: string | null, options: RequestInit = {}): Promise<T> {
+type Token = string | null;
+
+async function request<T>(url: string, token: Token, options: RequestInit = {}): Promise<T> {
   const headers = new Headers();
   if (token) {
     headers.append("Authorization", `Bearer ${token}`);
@@ -21,12 +23,12 @@ async function request<T>(url: string, token: string | null, options: RequestIni
   return res.json() as Promise<T>;
 }
 
-const get = <T>(url: string, token: string | null = null) => request<T>(url, token);
-const post = <T>(url: string, data: unknown, token: string | null = null) => request<T>(url, token, { method: "POST", body: JSON.stringify(data) });
-const put = <T>(url: string, data: unknown, token: string | null = null) => request<T>(url, token, { method: "PUT", body: JSON.stringify(data) });
-const del = <T>(url: string, token: string | null = null) => request<T>(url, token, { method: "DELETE" });
+const get = <T>(url: string, token: Token = null) => request<T>(url, token);
+const post = <T>(url: string, data: unknown, token: Token = null) => request<T>(url, token, { method: "POST", body: JSON.stringify(data) });
+const put = <T>(url: string, data: unknown, token: Token = null) => request<T>(url, token, { method: "PUT", body: JSON.stringify(data) });
+const del = <T>(url: string, token: Token = null) => request<T>(url, token, { method: "DELETE" });
 
-const putMultipart = <T>(url: string, formData: FormData, token: string | null = null) =>
+const putMultipart = <T>(url: string, formData: FormData, token: Token = null) =>
   request<T>(url, token, { method: "PUT", body: formData });
 
 export const productApi = {
@@ -47,45 +49,32 @@ export const productApi = {
 };
 
 export const cartApi = {
-  getAll: (token: string | null = null) => get<CartItem[]>("/cart", token),
-  add: (productId: number, quantity = 1, token: string | null) => post<CartItem>("/cart", { product_id: productId, quantity }, token),
-  update: (id: number, quantity: number, token: string | null) => put<CartItem>(`/cart/${id}`, { quantity }, token),
-  remove: (id: number, token: string | null) => del<{ message: string }>(`/cart/${id}`, token),
-  clear: (token: string | null) => del<{ message: string }>("/cart", token),
-  checkout: (token: string | null) => post<{ status: string; message: string }>("/checkout", {}, token),
+  getAll: (token: Token = null) => get<CartItem[]>("/cart", token),
+  add: (productId: number, quantity = 1, token: Token) => post<CartItem>("/cart", { product_id: productId, quantity }, token),
+  update: (id: number, quantity: number, token: Token) => put<CartItem>(`/cart/${id}`, { quantity }, token),
+  remove: (id: number, token: Token) => del<{ message: string }>(`/cart/${id}`, token),
+  clear: (token: Token) => del<{ message: string }>("/cart", token),
+  checkout: (token: Token) => post<{ status: string; message: string }>("/checkout", {}, token),
 };
 
 export const categoryApi = {
   getAll: () => get<string[]>("/categories"),
 };
 
-export interface UpdateUserPayload {
-  email?: string;
-  password?: string;
-  role?: "user" | "admin";
+export const userApi = {
+  getAll: (token : Token = null) => get<User[]>("/users", token),
+  getCart: (userId: string, token: Token = null) => get<CartItem[]>(`/cart/user/${userId}`, token),
+  updateSelf: (payload: UpdateUserPayload, token: Token = null) => putMultipart<User>("/users/me", buildUpdateForm(payload), token),
+  updateUser: (userId: string, payload: UpdateUserPayload, token: Token = null) => putMultipart<User>(`/users/${userId}`, buildUpdateForm(payload), token),
+  delete: (userId: string, token: Token = null) => del<{ message: string }>(`/users/${userId}`, token),
 }
 
-export const userApi = {
-  getAll: (token : string | null = null) => get<User[]>("/users", token),
-  getCart: (userId: string, token: string | null = null) => get<CartItem[]>(`/cart/user/${userId}`, token),
-  updateSelf: (payload: UpdateUserPayload, token: string | null = null) =>
-    put<User>("/users/me", payload, token),
-  updateUser: (userId: string, payload: UpdateUserPayload, token: string | null = null) =>
-    put<User>(`/users/${userId}`, payload, token),
-  delete: (userId: string, token: string | null = null) =>
-    del<{ message: string }>(`/users/${userId}`, token),
-  uploadSelfAvatar: (file: File, token: string | null = null) => {
-    const form = new FormData();
-    form.append("file", file, file.name);
-    return putMultipart<User>("/users/me/avatar", form, token);
-  },
-  deleteSelfAvatar: (token: string | null = null) =>
-    del<User>("/users/me/avatar", token),
-  uploadUserAvatar: (userId: string, file: File, token: string | null = null) => {
-    const form = new FormData();
-    form.append("file", file, file.name);
-    return putMultipart<User>(`/users/${userId}/avatar`, form, token);
-  },
-  deleteUserAvatar: (userId: string, token: string | null = null) =>
-    del<User>(`/users/${userId}/avatar`, token),
+function buildUpdateForm(payload: UpdateUserPayload): FormData {
+  const form = new FormData();
+  if (payload.email) form.append("email", payload.email);
+  if (payload.password) form.append("password", payload.password);
+  if (payload.role) form.append("role", payload.role);
+  if (payload.file) form.append("file", payload.file, payload.file.name);
+  if (payload.removeAvatar) form.append("remove_avatar", "true");
+  return form;
 }

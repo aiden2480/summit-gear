@@ -33,3 +33,11 @@ export interface ToastMessage {
   message: string;
   type: ToastType;
 }
+
+export interface UpdateUserPayload {
+  email?: string;
+  password?: string;
+  role?: "user" | "admin";
+  file?: File;
+  removeAvatar?: boolean;
+}

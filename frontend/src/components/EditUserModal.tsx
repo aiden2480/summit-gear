@@ -20,13 +20,15 @@ const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
 export default function EditUserModal({ user: initialUser, mode, onClose, onSaved, addToast }: EditUserModalProps) {
   const { auth, login, setAvatar } = useAuth();
-  const [user, setUser] = useState<User>(initialUser);
+  const [user] = useState<User>(initialUser);
   const [email, setEmail] = useState(initialUser.username);
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"user" | "admin">(initialUser.role);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [avatarBusy, setAvatarBusy] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUser.avatar);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isSelfTarget = auth.user === user.username;
@@ -36,73 +38,38 @@ export default function EditUserModal({ user: initialUser, mode, onClose, onSave
     let msg = e instanceof Error ? e.message : fallback;
     try {
       const parsed = JSON.parse(msg);
-      if (parsed && typeof parsed.error === "string") {
-        msg = parsed.error;
-      }
+      if (parsed && typeof parsed.error === "string") msg = parsed.error;
     } catch {
-      // not JSON, use raw message
+      // not JSON
     }
     return msg;
   }
 
-  function applyAvatarUpdate(updated: User) {
-    setUser(updated);
-    onSaved(updated);
-    if (isSelfTarget) {
-      setAvatar(updated.avatar);
-    }
-  }
-
-  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
 
     if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
       setError("Profile picture must be a PNG or JPEG image");
-      addToast("Profile picture must be a PNG or JPEG image", "error");
       return;
     }
-
     if (file.size > MAX_AVATAR_BYTES) {
       setError("Profile picture must be 2 MB or smaller");
-      addToast("Profile picture must be 2 MB or smaller", "error");
       return;
     }
 
     setError(null);
-    setAvatarBusy(true);
-    try {
-      const updated = mode === "self"
-        ? await userApi.uploadSelfAvatar(file, auth.token)
-        : await userApi.uploadUserAvatar(user.id, file, auth.token);
-      applyAvatarUpdate(updated);
-      addToast("Profile picture updated", "success");
-    } catch (err) {
-      const msg = extractErrorMessage(err, "Failed to upload profile picture");
-      setError(msg);
-      addToast(msg, "error");
-    } finally {
-      setAvatarBusy(false);
-    }
+    setPendingFile(file);
+    setRemoveAvatar(false);
+    setPreviewUrl(URL.createObjectURL(file));
   }
 
-  async function handleAvatarRemove() {
+  function handleRemoveAvatar() {
+    setPendingFile(null);
+    setPreviewUrl(null);
+    setRemoveAvatar(true);
     setError(null);
-    setAvatarBusy(true);
-    try {
-      const updated = mode === "self"
-        ? await userApi.deleteSelfAvatar(auth.token)
-        : await userApi.deleteUserAvatar(user.id, auth.token);
-      applyAvatarUpdate(updated);
-      addToast("Profile picture removed", "success");
-    } catch (err) {
-      const msg = extractErrorMessage(err, "Failed to remove profile picture");
-      setError(msg);
-      addToast(msg, "error");
-    } finally {
-      setAvatarBusy(false);
-    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -110,48 +77,45 @@ export default function EditUserModal({ user: initialUser, mode, onClose, onSave
     setError(null);
 
     const trimmedEmail = email.trim();
-    const payload: { email?: string; password?: string; role?: "user" | "admin" } = {};
+    const payload: Parameters<typeof userApi.updateSelf>[0] = {};
 
-    if (trimmedEmail !== user.username) {
-      payload.email = trimmedEmail;
-    }
-
+    if (trimmedEmail !== user.username) payload.email = trimmedEmail;
     if (password.length > 0) {
-      if (password.length < 8) {
-        setError("Password must be at least 8 characters");
-        return;
-      }
+      if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
       payload.password = password;
     }
+    if (showRoleField && role !== user.role) payload.role = role;
+    if (pendingFile) payload.file = pendingFile;
+    if (removeAvatar) payload.removeAvatar = true;
 
-    if (showRoleField && role !== user.role) {
-      payload.role = role;
-    }
-
-    if (Object.keys(payload).length === 0) {
-      setError("No changes to save");
-      return;
-    }
+    if (Object.keys(payload).length === 0) { setError("No changes to save"); return; }
 
     setSubmitting(true);
     try {
       const updated = mode === "self"
         ? await userApi.updateSelf(payload, auth.token)
         : await userApi.updateUser(user.id, payload, auth.token);
-      addToast("User updated successfully", "success");
-      if (isSelfTarget && updated.username !== auth.user) {
-        login(updated.username, auth.token!, updated.role, updated.id, updated.avatar);
+      addToast("Saved successfully", "success");
+      if (isSelfTarget) {
+        if (updated.username !== auth.user) {
+          login(updated.username, auth.token!, updated.role, updated.id, updated.avatar);
+        } else {
+          setAvatar(updated.avatar);
+        }
       }
       onSaved(updated);
       onClose();
-    } catch (e: unknown) {
-      const msg = extractErrorMessage(e, "Failed to update user");
+    } catch (err) {
+      const msg = extractErrorMessage(err, "Failed to save changes");
       setError(msg);
       addToast(msg, "error");
     } finally {
       setSubmitting(false);
     }
   }
+
+  const avatarPreviewUser = { ...user, avatar: previewUrl };
+  const hasAvatar = previewUrl !== null;
 
   return (
     <>
@@ -163,29 +127,29 @@ export default function EditUserModal({ user: initialUser, mode, onClose, onSave
         </p>
 
         <div className="modal__avatar-section">
-          <Avatar user={user} size="lg" />
+          <Avatar user={avatarPreviewUser} size="lg" />
           <div className="modal__avatar-actions">
             <input
               ref={fileInputRef}
               type="file"
               accept="image/png,image/jpeg"
-              onChange={handleAvatarChange}
+              onChange={handleFileChange}
               style={{ display: "none" }}
             />
             <button
               type="button"
               className="btn btn--success btn--small"
               onClick={() => fileInputRef.current?.click()}
-              disabled={avatarBusy}
+              disabled={submitting}
             >
-              {avatarBusy ? "Uploading..." : user.avatar ? "Change photo" : "Upload photo"}
+              {hasAvatar ? "Change photo" : "Upload photo"}
             </button>
-            {user.avatar && (
+            {hasAvatar && (
               <button
                 type="button"
                 className="btn btn--danger btn--small"
-                onClick={handleAvatarRemove}
-                disabled={avatarBusy}
+                onClick={handleRemoveAvatar}
+                disabled={submitting}
               >
                 Remove photo
               </button>
