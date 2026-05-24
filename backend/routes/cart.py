@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload
 from database import get_session
 from database.models import CartItem, Product
 from routes.auth import get_current_user
-from routes.helpers import try_parse_uuid, parse_json_body
+from routes.helpers import try_parse_uuid, try_parse_json_body
 
 routes = web.RouteTableDef()
 
@@ -22,7 +22,7 @@ async def get_cart(request : web.Request):
 
 @routes.post("/api/cart")
 async def add_to_cart(request : web.Request):
-    data = await parse_json_body(request)
+    data = await try_parse_json_body(request)
     product_id = data.get("product_id")
     quantity = data.get("quantity", 1)
 
@@ -71,7 +71,7 @@ async def add_to_cart(request : web.Request):
 @routes.put("/api/cart/{id}")
 async def update_cart_item(request : web.Request):
     item_id = int(request.match_info["id"])
-    data = await parse_json_body(request)
+    data = await try_parse_json_body(request)
     quantity = data.get("quantity")
 
     if quantity is None:

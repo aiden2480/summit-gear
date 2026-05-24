@@ -9,7 +9,7 @@ from email_validator import validate_email, EmailNotValidError
 from sqlmodel import select
 from database import get_session
 from database.models import User
-from routes.helpers import parse_json_body
+from routes.helpers import try_parse_json_body
 
 
 routes = web.RouteTableDef()
@@ -74,7 +74,7 @@ def require_admin(handler):
 
 @routes.post("/login")
 async def login(request: web.Request) -> web.Response:
-    data = await parse_json_body(request)
+    data = await try_parse_json_body(request)
     username = data.get("username", "").strip()
     password = data.get("password", "")
 
@@ -99,7 +99,7 @@ async def login(request: web.Request) -> web.Response:
 
 @routes.post("/register")
 async def register(request: web.Request) -> web.Response:
-    data = await parse_json_body(request)
+    data = await try_parse_json_body(request)
     username = data.get("username", "").strip()
     password = data.get("password", "")
 

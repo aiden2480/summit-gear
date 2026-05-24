@@ -6,7 +6,7 @@ from email_validator import validate_email, EmailNotValidError
 from database import get_session
 from database.models import User
 from routes.auth import get_current_user, require_admin, hash_password
-from routes.helpers import try_parse_uuid, parse_json_body
+from routes.helpers import try_parse_uuid, try_parse_json_body
 
 
 routes = web.RouteTableDef()
@@ -85,7 +85,7 @@ async def _persist_changes(target_uuid: uuid.UUID, changes: dict) -> web.Respons
 @routes.put("/api/users/me")
 async def update_self(request: web.Request) -> web.Response:
     caller = await get_current_user(request)
-    data = await parse_json_body(request)
+    data = await try_parse_json_body(request)
 
     changes, err = _validate_changes(data, allow_role_change=False)
     if err is not None:
@@ -99,7 +99,7 @@ async def update_self(request: web.Request) -> web.Response:
 async def update_user(request: web.Request) -> web.Response:
     target_uuid = try_parse_uuid(request.match_info["user_id"])
     caller = request["user"]
-    data = await parse_json_body(request)
+    data = await try_parse_json_body(request)
 
     changes, err = _validate_changes(data, allow_role_change=True)
     if err is not None:
