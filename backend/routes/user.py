@@ -1,4 +1,3 @@
-import json
 import uuid
 from aiohttp import web
 from sqlmodel import select
@@ -7,6 +6,7 @@ from email_validator import validate_email, EmailNotValidError
 from database import get_session
 from database.models import User
 from routes.auth import get_current_user, require_admin, hash_password
+from routes.helpers import try_parse_uuid, parse_json_body
 
 
 routes = web.RouteTableDef()
@@ -85,7 +85,7 @@ async def _persist_changes(target_uuid: uuid.UUID, changes: dict) -> web.Respons
 @routes.put("/api/users/me")
 async def update_self(request: web.Request) -> web.Response:
     caller = await get_current_user(request)
-    data = await _parse_json_body(request)
+    data = await parse_json_body(request)
 
     changes, err = _validate_changes(data, allow_role_change=False)
     if err is not None:
@@ -97,9 +97,9 @@ async def update_self(request: web.Request) -> web.Response:
 @routes.put("/api/users/{user_id}")
 @require_admin
 async def update_user(request: web.Request) -> web.Response:
-    target_uuid = _parse_user_id(request)
+    target_uuid = try_parse_uuid(request.match_info["user_id"])
     caller = request["user"]
-    data = await _parse_json_body(request)
+    data = await parse_json_body(request)
 
     changes, err = _validate_changes(data, allow_role_change=True)
     if err is not None:
@@ -115,7 +115,7 @@ async def update_user(request: web.Request) -> web.Response:
 @require_admin
 async def delete_user(request: web.Request) -> web.Response:
     caller = await get_current_user(request)
-    target_uuid = _parse_user_id(request)
+    target_uuid = try_parse_uuid(request.match_info["user_id"])
 
     if caller["user_id"] == target_uuid:
         return web.json_response({"error": "Admins cannot delete their own account"}, status=400)
@@ -131,17 +131,3 @@ async def delete_user(request: web.Request) -> web.Response:
         await session.commit()
 
     return web.json_response({"message": "User deleted"})
-
-
-async def _parse_json_body(request: web.Request) -> dict:
-    try:
-        return await request.json()
-    except (json.JSONDecodeError, ValueError):
-        raise web.HTTPBadRequest(text="Invalid JSON body")
-
-
-def _parse_user_id(request: web.Request) -> uuid.UUID:
-    try:
-        return uuid.UUID(request.match_info["user_id"])
-    except ValueError:
-        raise web.HTTPBadRequest(text="Invalid user ID")
