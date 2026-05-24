@@ -31,7 +31,7 @@ export default function Header({ cartCount, onCartClick, onLogout, onProfileClic
           {auth.user && onProfileClick && auth.userId && (
             <button className="btn btn--profile" onClick={onProfileClick} aria-label="Edit profile">
               <Avatar
-                user={{ username: auth.user, avatar: auth.avatar }}
+                user={{ id: auth.userId, username: auth.user, avatar: auth.avatar }}
                 size="sm"
               />
             </button>
