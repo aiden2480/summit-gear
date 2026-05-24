@@ -1,4 +1,5 @@
 import { useAuth } from "../context/AuthContext";
+import Avatar from "./Avatar";
 import "./Header.css";
 
 interface HeaderProps {
@@ -23,13 +24,16 @@ export default function Header({ cartCount, onCartClick, onLogout, onProfileClic
         <nav className="header__actions">
           {auth.user && 
             <span className="header__user">
-              👤 {auth.user}
+              {auth.user}
               {auth.role === "admin" && <span className="header__admin-badge">Admin</span>}
             </span>
           }
-          {auth.user && onProfileClick && (
-            <button className="btn btn--logout" onClick={onProfileClick} aria-label="Edit profile">
-              Profile
+          {auth.user && onProfileClick && auth.userId && (
+            <button className="btn btn--profile" onClick={onProfileClick} aria-label="Edit profile">
+              <Avatar
+                user={{ username: auth.user, avatar: auth.avatar }}
+                size="sm"
+              />
             </button>
           )}
           {auth.role !== 'admin' &&  

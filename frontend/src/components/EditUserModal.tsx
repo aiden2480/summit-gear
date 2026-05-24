@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { userApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import Avatar from "./Avatar";
 import type { User, ToastType } from "../types";
 import "./UserCard.css";
 import "./Header.css";
@@ -14,16 +15,95 @@ interface EditUserModalProps {
   addToast: (message: string, type?: ToastType) => void;
 }
 
-export default function EditUserModal({ user, mode, onClose, onSaved, addToast }: EditUserModalProps) {
-  const { auth, login } = useAuth();
-  const [email, setEmail] = useState(user.username);
+const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg"];
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+
+export default function EditUserModal({ user: initialUser, mode, onClose, onSaved, addToast }: EditUserModalProps) {
+  const { auth, login, setAvatar } = useAuth();
+  const [user, setUser] = useState<User>(initialUser);
+  const [email, setEmail] = useState(initialUser.username);
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"user" | "admin">(user.role);
+  const [role, setRole] = useState<"user" | "admin">(initialUser.role);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [avatarBusy, setAvatarBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isSelfTarget = auth.user === user.username;
   const showRoleField = mode === "admin" && !isSelfTarget;
+
+  function extractErrorMessage(e: unknown, fallback: string) {
+    let msg = e instanceof Error ? e.message : fallback;
+    try {
+      const parsed = JSON.parse(msg);
+      if (parsed && typeof parsed.error === "string") {
+        msg = parsed.error;
+      }
+    } catch {
+      // not JSON, use raw message
+    }
+    return msg;
+  }
+
+  function applyAvatarUpdate(updated: User) {
+    setUser(updated);
+    onSaved(updated);
+    if (isSelfTarget) {
+      setAvatar(updated.avatar);
+    }
+  }
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      setError("Profile picture must be a PNG or JPEG image");
+      addToast("Profile picture must be a PNG or JPEG image", "error");
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_BYTES) {
+      setError("Profile picture must be 2 MB or smaller");
+      addToast("Profile picture must be 2 MB or smaller", "error");
+      return;
+    }
+
+    setError(null);
+    setAvatarBusy(true);
+    try {
+      const updated = mode === "self"
+        ? await userApi.uploadSelfAvatar(file, auth.token)
+        : await userApi.uploadUserAvatar(user.id, file, auth.token);
+      applyAvatarUpdate(updated);
+      addToast("Profile picture updated", "success");
+    } catch (err) {
+      const msg = extractErrorMessage(err, "Failed to upload profile picture");
+      setError(msg);
+      addToast(msg, "error");
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
+
+  async function handleAvatarRemove() {
+    setError(null);
+    setAvatarBusy(true);
+    try {
+      const updated = mode === "self"
+        ? await userApi.deleteSelfAvatar(auth.token)
+        : await userApi.deleteUserAvatar(user.id, auth.token);
+      applyAvatarUpdate(updated);
+      addToast("Profile picture removed", "success");
+    } catch (err) {
+      const msg = extractErrorMessage(err, "Failed to remove profile picture");
+      setError(msg);
+      addToast(msg, "error");
+    } finally {
+      setAvatarBusy(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,20 +140,12 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
         : await userApi.updateUser(user.id, payload, auth.token);
       addToast("User updated successfully", "success");
       if (isSelfTarget && updated.username !== auth.user) {
-        login(updated.username, auth.token!, updated.role, updated.id);
+        login(updated.username, auth.token!, updated.role, updated.id, updated.avatar);
       }
       onSaved(updated);
       onClose();
     } catch (e: unknown) {
-      let msg = e instanceof Error ? e.message : "Failed to update user";
-      try {
-        const parsed = JSON.parse(msg);
-        if (parsed && typeof parsed.error === "string") {
-          msg = parsed.error;
-        }
-      } catch {
-        // not JSON, use raw message
-      }
+      const msg = extractErrorMessage(e, "Failed to update user");
       setError(msg);
       addToast(msg, "error");
     } finally {
@@ -89,6 +161,38 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
         <p className="modal__subtitle">
           {mode === "self" ? "Update your account details" : `Editing ${user.username}`}
         </p>
+
+        <div className="modal__avatar-section">
+          <Avatar user={user} size="lg" />
+          <div className="modal__avatar-actions">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg"
+              onChange={handleAvatarChange}
+              style={{ display: "none" }}
+            />
+            <button
+              type="button"
+              className="btn btn--success btn--small"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={avatarBusy}
+            >
+              {avatarBusy ? "Uploading..." : user.avatar ? "Change photo" : "Upload photo"}
+            </button>
+            {user.avatar && (
+              <button
+                type="button"
+                className="btn btn--danger btn--small"
+                onClick={handleAvatarRemove}
+                disabled={avatarBusy}
+              >
+                Remove photo
+              </button>
+            )}
+            <span className="modal__hint">PNG or JPEG, up to 2 MB</span>
+          </div>
+        </div>
 
         <form className="modal__form" onSubmit={handleSubmit}>
           <div className="modal__field">

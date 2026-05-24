@@ -5,12 +5,14 @@ interface AuthState {
   userId: string | null;
   token: string | null;
   role: string | null;
+  avatar: string | null;
 }
 
 interface AuthContextType {
   auth: AuthState;
-  login: (user: string, token: string, role: string, userId: string) => void;
+  login: (user: string, token: string, role: string, userId: string, avatar?: string | null) => void;
   logout: () => void;
+  setAvatar: (avatar: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -21,14 +23,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userId: localStorage.getItem("userId"),
     token: localStorage.getItem("token"),
     role: localStorage.getItem("role"),
+    avatar: localStorage.getItem("avatar"),
   });
 
-  const login = (user: string, token: string, role: string, userId: string) => {
+  const login = (user: string, token: string, role: string, userId: string, avatar: string | null = null) => {
     localStorage.setItem("user", user);
     localStorage.setItem("userId", userId);
     localStorage.setItem("token", token);
     localStorage.setItem("role", role);
-    setAuth({ user, userId, token, role });
+    if (avatar) localStorage.setItem("avatar", avatar);
+    else localStorage.removeItem("avatar");
+    setAuth({ user, userId, token, role, avatar });
   };
 
   const logout = () => {
@@ -36,7 +41,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("userId");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    setAuth({ user: null, userId: null, token: null, role: null });
+    localStorage.removeItem("avatar");
+    setAuth({ user: null, userId: null, token: null, role: null, avatar: null });
+  };
+
+  const setAvatar = (avatar: string | null) => {
+    if (avatar) localStorage.setItem("avatar", avatar);
+    else localStorage.removeItem("avatar");
+    setAuth((prev) => ({ ...prev, avatar }));
   };
 
   useEffect(() => {
@@ -45,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext value={{ auth, login, logout }}>
+    <AuthContext value={{ auth, login, logout, setAvatar }}>
       {children}
     </AuthContext>
   );

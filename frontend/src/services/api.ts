@@ -26,6 +26,9 @@ const post = <T>(url: string, data: unknown, token: string | null = null) => req
 const put = <T>(url: string, data: unknown, token: string | null = null) => request<T>(url, token, { method: "PUT", body: JSON.stringify(data) });
 const del = <T>(url: string, token: string | null = null) => request<T>(url, token, { method: "DELETE" });
 
+const putMultipart = <T>(url: string, formData: FormData, token: string | null = null) =>
+  request<T>(url, token, { method: "PUT", body: formData });
+
 export const productApi = {
   getAll: (category?: string, search?: string) => {
     const params = new URLSearchParams();
@@ -71,4 +74,18 @@ export const userApi = {
     put<User>(`/users/${userId}`, payload, token),
   delete: (userId: string, token: string | null = null) =>
     del<{ message: string }>(`/users/${userId}`, token),
+  uploadSelfAvatar: (file: File, token: string | null = null) => {
+    const form = new FormData();
+    form.append("file", file, file.name);
+    return putMultipart<User>("/users/me/avatar", form, token);
+  },
+  deleteSelfAvatar: (token: string | null = null) =>
+    del<User>("/users/me/avatar", token),
+  uploadUserAvatar: (userId: string, file: File, token: string | null = null) => {
+    const form = new FormData();
+    form.append("file", file, file.name);
+    return putMultipart<User>(`/users/${userId}/avatar`, form, token);
+  },
+  deleteUserAvatar: (userId: string, token: string | null = null) =>
+    del<User>(`/users/${userId}/avatar`, token),
 }

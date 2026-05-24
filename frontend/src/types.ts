@@ -23,6 +23,7 @@ export interface User {
   id: string,
   username: string;
   role: "admin" | "user";
+  avatar: string | null;
 }
 
 export type ToastType = "success" | "error";

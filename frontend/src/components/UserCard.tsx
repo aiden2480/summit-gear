@@ -1,5 +1,6 @@
 import "./UserCard.css";
 import Card from "./Card";
+import Avatar from "./Avatar";
 import type { User } from "../types";
 
 interface UserCardProps {
@@ -14,7 +15,7 @@ export default function UserCard({ user, onEdit, onDelete, openCart }: UserCardP
   return (
     <Card className="user-card">
       <div className="user-card__header">
-        <div className="user-card__avatar">{user.username.charAt(0).toUpperCase()}</div>
+        <Avatar user={user} size="md" />
         <div className="user-card__badge" data-role={user.role}>
           {user.role}
         </div>

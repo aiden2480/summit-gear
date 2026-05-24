@@ -1,7 +1,20 @@
+import base64
 import uuid
-from typing import List
+from typing import List, Optional
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, LargeBinary, Column
+
+
+_PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
+_JPEG_MAGIC = b"\xff\xd8\xff"
+
+
+def _sniff_avatar_mime(data: bytes) -> Optional[str]:
+    if data.startswith(_PNG_MAGIC):
+        return "image/png"
+    if data.startswith(_JPEG_MAGIC):
+        return "image/jpeg"
+    return None
 
 
 class User(SQLModel, table=True):
@@ -14,13 +27,22 @@ class User(SQLModel, table=True):
     username: str = Field(unique=True, index=True)
     hashed_password: str
     role: str = Field(default="user")
+    avatar_blob: Optional[bytes] = Field(default=None, sa_column=Column(LargeBinary, nullable=True))
     cart: List["CartItem"] = Relationship(back_populates="user", cascade_delete=True)
+
+    @property
+    def avatar(self) -> Optional[str]:
+        if not self.avatar_blob:
+            return None
+        mime = _sniff_avatar_mime(self.avatar_blob) or "application/octet-stream"
+        return f"data:{mime};base64,{base64.b64encode(self.avatar_blob).decode('ascii')}"
 
     def to_dict(self):
         return {
             "id": str(self.id),
             "username": self.username,
             "role": self.role,
+            "avatar": self.avatar,
         }
 
 class Product(SQLModel, table=True):
