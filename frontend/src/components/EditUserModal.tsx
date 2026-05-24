@@ -65,7 +65,15 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
       onSaved(updated);
       onClose();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to update user";
+      let msg = e instanceof Error ? e.message : "Failed to update user";
+      try {
+        const parsed = JSON.parse(msg);
+        if (parsed && typeof parsed.error === "string") {
+          msg = parsed.error;
+        }
+      } catch {
+        // not JSON, use raw message
+      }
       setError(msg);
       addToast(msg, "error");
     } finally {
