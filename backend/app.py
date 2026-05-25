@@ -5,6 +5,7 @@ from routes.auth import routes as auth_routes
 from routes.cart import routes as cart_routes
 from routes.products import routes as product_routes
 from routes.user import routes as user_routes
+from routes.admin import routes as admin_routes
 
 
 def create_app() -> web.Application:
@@ -15,6 +16,7 @@ def create_app() -> web.Application:
     app.router.add_routes(product_routes)
     app.router.add_routes(cart_routes)
     app.router.add_routes(user_routes)
+    app.router.add_routes(admin_routes)
 
     # Enable CORS so the frontend (localhost:5173) can make requests to the
     # backend (localhost:8080). Without this, browsers block cross-origin fetches.

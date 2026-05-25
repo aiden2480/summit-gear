@@ -123,5 +123,4 @@ async def register(request: web.Request) -> web.Response:
         session.add(new_user)
         await session.commit()
 
-    token = create_access_token(new_user.id, "user")
-    return web.json_response({"id": str(new_user.id), "user": username, "token": token, "role": "user"}, status=201)
+    return web.json_response({"user": username, "role": "user"}, status=201)

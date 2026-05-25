@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 const API_BASE_URL = 'http://localhost:8080';
@@ -10,7 +9,6 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { login } = useAuth();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,9 +21,7 @@ const Register = () => {
           body: JSON.stringify({ username: email, password }),
         });
         if (response.ok) {
-          const data = await response.json();
-          login(data.user, data.token, data.role, data.id);
-          navigate('/', { replace: true });
+          navigate('/login', { replace: true });
         } else {
           const err = await response.json();
           setError(err.error || 'Registration failed. Please try again.');
