@@ -27,7 +27,7 @@ export default function EditUserModal({ user: initialUser, mode, onClose, onSave
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUser.avatar);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUser.avatar ?? null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
