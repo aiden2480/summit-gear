@@ -1,34 +1,26 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authApi } from '../services/api';
 import './Login.css';
-
-const API_BASE_URL = 'http://localhost:8080';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleLogin = async (e: React.SubmitEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (email.trim() && password.trim()) {
       try {
-        const response = await fetch(API_BASE_URL + '/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: email, password }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          login(data.user, data.token, data.role, data.id, data.avatar);
-          navigate('/', { replace: true });
-        } else {
-          alert('Login failed. Please check your credentials.');
-        }
-      } catch {
-        alert('Error logging in. Please try again.');
+        const data = await authApi.login(email, password);
+        login(data.user, data.token, data.role, data.id, data.avatar);
+        navigate('/', { replace: true });
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
       }
     }
   };
@@ -67,6 +59,7 @@ const Login = () => {
           </div>
 
           <button type="submit" className="login-button">Sign In</button>
+          {error && <p className="login-error">{error}</p>}
         </form>
 
         <div className="login-footer">

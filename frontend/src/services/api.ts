@@ -59,6 +59,47 @@ export const categoryApi = {
   getAll: () => get<string[]>("/categories"),
 };
 
+export interface AuthResponse {
+  id: string;
+  user: string;
+  token: string;
+  role: "user" | "admin";
+  avatar?: string | null;
+}
+
+export interface RegisterResponse {
+  user: string;
+  role: "user" | "admin";
+}
+
+const AUTH_BASE = "http://localhost:8080";
+
+async function authRequest<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${AUTH_BASE}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let message = `Request failed with status ${res.status}`;
+    try {
+      const data = await res.json();
+      if (data && typeof data.error === "string") message = data.error;
+    } catch {
+      // non-JSON response, fall back to default
+    }
+    throw new Error(message);
+  }
+  return res.json() as Promise<T>;
+}
+
+export const authApi = {
+  login: (username: string, password: string) =>
+    authRequest<AuthResponse>("/login", { username, password }),
+  register: (username: string, password: string) =>
+    authRequest<RegisterResponse>("/register", { username, password }),
+};
+
 export const userApi = {
   getAll: (token : string | null = null) => get<User[]>("/users", token),
   getCart: (userId: string, token: string | null = null) => get<CartItem[]>(`/cart/user/${userId}`, token),
