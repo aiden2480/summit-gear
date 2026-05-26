@@ -76,6 +76,7 @@ export default function UserGrid({ onViewCart, addToast }: UserGridProps) {
       <Grid
         empty={users.length === 0}
         loading={loading}
+        loadingText="Loading users..."
         error={error}
         emptyTitle="No users found"
         emptyDescription="No users have been created yet."

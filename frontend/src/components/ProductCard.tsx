@@ -1,3 +1,4 @@
+import Card from "./Card";
 import "./ProductCard.css";
 import type { Product } from "../types";
 
@@ -10,7 +11,7 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
   const outOfStock = product.stock <= 0;
 
   return (
-    <article className={`product-card${outOfStock ? " product-card--out-of-stock" : ""}`} tabIndex={0}>
+    <Card className={`product-card${outOfStock ? " product-card--out-of-stock" : ""}`}>
       <div className="product-card__img-wrapper">
         <img
           className="product-card__img"
@@ -41,6 +42,6 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
           </div>
         </div>
       </div>
-    </article>
+    </Card>
   );
 }
