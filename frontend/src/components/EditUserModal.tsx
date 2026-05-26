@@ -1,52 +1,89 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { userApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
-import type { User, ToastType } from "../types";
+import Avatar from "./Avatar";
+import type { User, ToastType, UpdateUserPayload } from "../types";
 import "./UserCard.css";
 import "./Header.css";
 import "./EditUserModal.css";
 
 interface EditUserModalProps {
-  user: User;
-  mode: "self" | "admin";
+  user?: User;
   onClose: () => void;
   onSaved: (updated: User) => void;
   addToast: (message: string, type?: ToastType) => void;
 }
 
-export default function EditUserModal({ user, mode, onClose, onSaved, addToast }: EditUserModalProps) {
-  const { auth, login } = useAuth();
-  const [email, setEmail] = useState(user.username);
+const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg"];
+const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
+
+export default function EditUserModal({ user: userProp, onClose, onSaved, addToast }: EditUserModalProps) {
+  const { auth, getLoggedInUser, login } = useAuth();
+  const initialUser = userProp ?? getLoggedInUser();
+
+  const [user] = useState<User>(initialUser);
+  const [email, setEmail] = useState(initialUser.username);
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"user" | "admin">(user.role);
+  const [role, setRole] = useState<"user" | "admin">(initialUser.role);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUser.avatar ?? null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const isSelfTarget = auth.user === user.username;
-  const showRoleField = mode === "admin" && !isSelfTarget;
+  const isSelfTarget = auth.userId === user.id;
+  const showRoleField = auth.role === "admin" && !isSelfTarget;
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      setError("Profile picture must be a PNG or JPEG image");
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      setError("Profile picture must be 2 MB or smaller");
+      return;
+    }
+
+    setError(null);
+    setPendingFile(file);
+    setRemoveAvatar(false);
+    setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  function handleRemoveAvatar() {
+    setPendingFile(null);
+    setPreviewUrl(null);
+    setRemoveAvatar(true);
+    setError(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
     const trimmedEmail = email.trim();
-    const payload: { email?: string; password?: string; role?: "user" | "admin" } = {};
+    const payload: UpdateUserPayload = {};
 
-    if (trimmedEmail !== user.username) {
-      payload.email = trimmedEmail;
+    if (password.length > 0 && password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
     }
 
-    if (password.length > 0) {
-      if (password.length < 8) {
-        setError("Password must be at least 8 characters");
-        return;
-      }
+    if (password.length > 0)
       payload.password = password;
-    }
-
-    if (showRoleField && role !== user.role) {
+    if (trimmedEmail !== user.username)
+      payload.email = trimmedEmail;
+    if (showRoleField && role !== user.role)
       payload.role = role;
-    }
+    if (pendingFile)
+      payload.avatar = pendingFile;
+    if (removeAvatar)
+      payload.removeAvatar = removeAvatar;
 
     if (Object.keys(payload).length === 0) {
       setError("No changes to save");
@@ -54,41 +91,72 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
     }
 
     setSubmitting(true);
+
     try {
-      const updated = mode === "self"
+      const updatedUser = isSelfTarget
         ? await userApi.updateSelf(payload, auth.token)
         : await userApi.updateUser(user.id, payload, auth.token);
-      addToast("User updated successfully", "success");
-      if (isSelfTarget && updated.username !== auth.user) {
-        login(updated.username, auth.token!, updated.role, updated.id);
+
+      addToast("Saved successfully", "success");
+
+      // If we are editing ourself, call login again so we can update the header icon
+      if (isSelfTarget) {
+        login(updatedUser.username, auth.token!, updatedUser.role, updatedUser.id, updatedUser.avatar);
       }
-      onSaved(updated);
+      
+      onSaved(updatedUser);
       onClose();
-    } catch (e: unknown) {
-      let msg = e instanceof Error ? e.message : "Failed to update user";
-      try {
-        const parsed = JSON.parse(msg);
-        if (parsed && typeof parsed.error === "string") {
-          msg = parsed.error;
-        }
-      } catch {
-        // not JSON, use raw message
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
       }
-      setError(msg);
-      addToast(msg, "error");
     } finally {
       setSubmitting(false);
     }
   }
 
+  const avatarPreviewUser = { ...user, avatar: previewUrl };
+  const hasAvatar = previewUrl !== null;
+
   return (
     <>
       <div className="modal-overlay" onClick={onClose} aria-hidden="true" />
       <div className="modal" role="dialog" aria-modal="true" aria-label="Edit user">
-        <h2 className="modal__title">{mode === "self" ? "Edit Profile" : "Edit User"}</h2>
-        <p className="modal__subtitle">
-          {mode === "self" ? "Update your account details" : `Editing ${user.username}`}
-        </p>
+        <h2 className="modal__title">{isSelfTarget ? "Edit Profile" : "Edit User"}</h2>
+
+        <div className="modal__avatar-section">
+          <Avatar user={avatarPreviewUser} size="lg" />
+          <div className="modal__avatar-actions">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg"
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+            />
+            <div className="modal__avatar-buttons">
+              <button
+                type="button"
+                className="btn btn--success btn--small"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={submitting}
+              >
+                Upload photo
+              </button>
+              {hasAvatar && (
+                <button
+                  type="button"
+                  className="btn btn--danger btn--small"
+                  onClick={handleRemoveAvatar}
+                  disabled={submitting}
+                >
+                  Remove photo
+                </button>
+              )}
+            </div>
+            <span className="modal__hint">PNG or JPEG, up to 2 MB</span>
+          </div>
+        </div>
 
         <form className="modal__form" onSubmit={handleSubmit}>
           <div className="modal__field">
@@ -124,8 +192,8 @@ export default function EditUserModal({ user, mode, onClose, onSaved, addToast }
                 value={role}
                 onChange={(e) => setRole(e.target.value as "user" | "admin")}
               >
-                <option value="user">user</option>
-                <option value="admin">admin</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
           )}

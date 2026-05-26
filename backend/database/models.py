@@ -1,26 +1,39 @@
+import base64
 import uuid
-from typing import List
+from typing import List, Optional
 from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, LargeBinary, Column
 
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
     __table_args__ = (
         CheckConstraint("role IN ('user', 'admin')", name="ck_users_role"),
+        CheckConstraint("avatar_mime IN ('image/png', 'image/jpeg')", name="ck_users_avatar_mime"),
+        CheckConstraint("(avatar_data IS NULL) = (avatar_mime IS NULL)", name="ck_users_avatar_both_or_neither"),
     )
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True, nullable=False)
     username: str = Field(unique=True, index=True)
     hashed_password: str
     role: str = Field(default="user")
+    avatar_data: Optional[bytes] = Field(default=None, sa_column=Column(LargeBinary, nullable=True))
+    avatar_mime: Optional[str] = Field(default=None, nullable=True)
     cart: List["CartItem"] = Relationship(back_populates="user", cascade_delete=True)
+
+    @property
+    def avatar(self) -> Optional[str]:
+        if not self.avatar_data or not self.avatar_mime:
+            return None
+
+        return f"data:{self.avatar_mime};base64,{base64.b64encode(self.avatar_data).decode('ascii')}"
 
     def to_dict(self):
         return {
             "id": str(self.id),
             "username": self.username,
             "role": self.role,
+            "avatar": self.avatar,
         }
 
 class Product(SQLModel, table=True):

@@ -22,7 +22,7 @@ const Login = () => {
         });
         if (response.ok) {
           const data = await response.json();
-          login(data.user, data.token, data.role, data.id);
+          login(data.user, data.token, data.role, data.id, data.avatar);
           navigate('/', { replace: true });
         } else {
           alert('Login failed. Please check your credentials.');

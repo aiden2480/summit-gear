@@ -95,7 +95,6 @@ export default function UserGrid({ onViewCart, addToast }: UserGridProps) {
       {editing && (
         <EditUserModal
           user={editing}
-          mode="admin"
           onClose={() => setEditing(null)}
           onSaved={handleSaved}
           addToast={addToast}

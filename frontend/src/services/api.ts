@@ -1,4 +1,4 @@
-import { CartItem, User } from "../types"
+import { CartItem, UpdateUserPayload, User } from "../types"
 
 const API_BASE = "http://localhost:8080/api";
 
@@ -25,6 +25,9 @@ const get = <T>(url: string, token: string | null = null) => request<T>(url, tok
 const post = <T>(url: string, data: unknown, token: string | null = null) => request<T>(url, token, { method: "POST", body: JSON.stringify(data) });
 const put = <T>(url: string, data: unknown, token: string | null = null) => request<T>(url, token, { method: "PUT", body: JSON.stringify(data) });
 const del = <T>(url: string, token: string | null = null) => request<T>(url, token, { method: "DELETE" });
+
+const putMultipart = <T>(url: string, formData: FormData, token: string | null = null) =>
+  request<T>(url, token, { method: "PUT", body: formData });
 
 export const productApi = {
   getAll: (category?: string, search?: string) => {
@@ -56,19 +59,20 @@ export const categoryApi = {
   getAll: () => get<string[]>("/categories"),
 };
 
-export interface UpdateUserPayload {
-  email?: string;
-  password?: string;
-  role?: "user" | "admin";
-}
-
 export const userApi = {
   getAll: (token : string | null = null) => get<User[]>("/users", token),
   getCart: (userId: string, token: string | null = null) => get<CartItem[]>(`/cart/user/${userId}`, token),
-  updateSelf: (payload: UpdateUserPayload, token: string | null = null) =>
-    put<User>("/users/me", payload, token),
-  updateUser: (userId: string, payload: UpdateUserPayload, token: string | null = null) =>
-    put<User>(`/users/${userId}`, payload, token),
-  delete: (userId: string, token: string | null = null) =>
-    del<{ message: string }>(`/users/${userId}`, token),
+  updateSelf: (payload: UpdateUserPayload, token: string | null = null) => putMultipart<User>("/users/me", buildUpdateForm(payload), token),
+  updateUser: (userId: string, payload: UpdateUserPayload, token: string | null = null) => putMultipart<User>(`/users/${userId}`, buildUpdateForm(payload), token),
+  delete: (userId: string, token: string | null = null) => del<{ message: string }>(`/users/${userId}`, token),
+}
+
+function buildUpdateForm(payload: UpdateUserPayload): FormData {
+  const form = new FormData();
+  if (payload.email) form.append("email", payload.email);
+  if (payload.password) form.append("password", payload.password);
+  if (payload.role) form.append("role", payload.role);
+  if (payload.avatar) form.append("avatar", payload.avatar, payload.avatar.name);
+  if (payload.removeAvatar) form.append("remove_avatar", "true");
+  return form;
 }

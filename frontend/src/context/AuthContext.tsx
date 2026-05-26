@@ -1,15 +1,18 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import type { User } from "../types";
 
 interface AuthState {
   user: string | null;
   userId: string | null;
   token: string | null;
   role: string | null;
+  avatar: string | null;
 }
 
 interface AuthContextType {
   auth: AuthState;
-  login: (user: string, token: string, role: string, userId: string) => void;
+  getLoggedInUser: () => User;
+  login: (user: string, token: string, role: string, userId: string, avatar?: string | null) => void;
   logout: () => void;
 }
 
@@ -21,14 +24,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userId: localStorage.getItem("userId"),
     token: localStorage.getItem("token"),
     role: localStorage.getItem("role"),
+    avatar: localStorage.getItem("avatar"),
   });
 
-  const login = (user: string, token: string, role: string, userId: string) => {
+  const getLoggedInUser = (): User => {
+    return {
+      id: auth.userId!,
+      username: auth.user!,
+      role: auth.role as "admin" | "user",
+      avatar: auth.avatar ?? null,
+    };
+  }
+
+  const login = (user: string, token: string, role: string, userId: string, avatar: string | null = null) => {
     localStorage.setItem("user", user);
     localStorage.setItem("userId", userId);
     localStorage.setItem("token", token);
     localStorage.setItem("role", role);
-    setAuth({ user, userId, token, role });
+    if (avatar) localStorage.setItem("avatar", avatar);
+    else localStorage.removeItem("avatar");
+    setAuth({ user, userId, token, role, avatar });
   };
 
   const logout = () => {
@@ -36,7 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("userId");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
-    setAuth({ user: null, userId: null, token: null, role: null });
+    localStorage.removeItem("avatar");
+    setAuth({ user: null, userId: null, token: null, role: null, avatar: null });
   };
 
   useEffect(() => {
@@ -45,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext value={{ auth, login, logout }}>
+    <AuthContext value={{ auth, getLoggedInUser, login, logout }}>
       {children}
     </AuthContext>
   );
