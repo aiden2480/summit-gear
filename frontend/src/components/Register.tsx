@@ -35,9 +35,13 @@ const Register = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>Create Account</h2>
-        <p>Join Summit Gear today</p>
-
+        <div className="login-header">
+          <img src="/sunrise.svg" alt="Summit Gear" className="login-logo-img" />
+          <div className="login-header-text">
+            <h2>Create Account</h2>
+            <p className="login-subtext">Join Summit Gear today</p>
+          </div>
+        </div>
         <form onSubmit={handleRegister}>
           <div className="input-group">
             <label>Email Address</label>

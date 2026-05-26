@@ -36,9 +36,13 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>Welcome Back</h2>
-        <p>Your adventure starts here</p>
-
+        <div className="login-header">
+          <img src="/sunrise.svg" alt="Summit Gear" className="login-logo-img" />
+          <div className="login-header-text">
+            <h2>Welcome Back</h2>
+            <p className="login-subtext">Your adventure starts here</p>
+          </div>
+        </div>
         <form onSubmit={handleLogin}>
           <div className="input-group">
             <label>Email Address</label>
