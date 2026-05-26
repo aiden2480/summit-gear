@@ -9,7 +9,7 @@ from routes.helpers import try_parse_uuid, try_parse_int, try_parse_json_body
 routes = web.RouteTableDef()
 
 @routes.get("/api/cart")
-async def get_cart(request : web.Request):
+async def get_cart(request: web.Request):
     async with get_session() as session:
         user_id = (await get_current_user(request)).get("user_id", "")
         result = await session.execute(
@@ -21,7 +21,7 @@ async def get_cart(request : web.Request):
 
 
 @routes.post("/api/cart")
-async def add_to_cart(request : web.Request):
+async def add_to_cart(request: web.Request):
     data = await try_parse_json_body(request)
     product_id = data.get("product_id")
     quantity = data.get("quantity", 1)
@@ -71,7 +71,7 @@ async def add_to_cart(request : web.Request):
 
 
 @routes.put("/api/cart/{id}")
-async def update_cart_item(request : web.Request):
+async def update_cart_item(request: web.Request):
     item_id = try_parse_int(request.match_info["id"], field="cart item id")
     data = await try_parse_json_body(request)
     quantity = data.get("quantity")
@@ -106,7 +106,7 @@ async def update_cart_item(request : web.Request):
 
 
 @routes.delete("/api/cart/{id}")
-async def remove_from_cart(request : web.Request):
+async def remove_from_cart(request: web.Request):
     item_id = try_parse_int(request.match_info["id"], field="cart item id")
     
     async with get_session() as session:
@@ -118,14 +118,14 @@ async def remove_from_cart(request : web.Request):
             raise web.HTTPNotFound(text="Cart item not found")
 
         statement = delete(CartItem).where(CartItem.id == item_id, CartItem.user_id == current_user_id)
-        await session.execute(statement);
+        await session.execute(statement)
         await session.commit()
 
     return web.json_response({"message": "Item removed from cart"})
 
 
 @routes.delete("/api/cart")
-async def clear_cart(request : web.Request):
+async def clear_cart(request: web.Request):
     async with get_session() as session:
         current_user_id = (await get_current_user(request)).get("user_id", "")
         statement = delete(CartItem).where(CartItem.user_id == current_user_id)
@@ -136,7 +136,7 @@ async def clear_cart(request : web.Request):
 
 
 @routes.post("/api/checkout")
-async def checkout(request : web.Request):
+async def checkout(request: web.Request):
     """Atomically validates stock, reduces quantities, and clears the cart."""
 
     async with get_session() as session:
@@ -152,21 +152,21 @@ async def checkout(request : web.Request):
                 raise web.HTTPBadRequest(text=f"Not enough stock for {item.product.name}")
             item.product.stock -= item.quantity
 
-        statement = delete(CartItem).where(CartItem.user_id == current_user_id);
+        statement = delete(CartItem).where(CartItem.user_id == current_user_id)
         await session.execute(statement)
         await session.commit()
 
     return web.json_response({"status": "success", "message": "Order placed successfully"})
 
 @routes.get("/api/cart/user/{user_id}")
-async def getUserCart(request : web.Request) -> web.Response:
+async def get_user_cart(request: web.Request) -> web.Response:
     async with get_session() as session:
         cartitem_user_id = try_parse_uuid(request.match_info["user_id"])
 
-        role = (await get_current_user(request)).get("role", "");
+        role = (await get_current_user(request)).get("role", "")
 
-        if (role != "admin") :
-            raise web.HTTPForbidden(text="You are not authorised to perform this action.");
+        if role != "admin":
+            raise web.HTTPForbidden(text="You are not authorised to perform this action.")
 
         result = await session.execute(
             select(CartItem).where(CartItem.user_id == cartitem_user_id).options(joinedload(CartItem.product)).order_by(CartItem.id)
