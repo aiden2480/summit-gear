@@ -1,13 +1,8 @@
-import uuid
 from typing import Optional
 from aiohttp import web
-from sqlmodel import select
-from sqlalchemy import func
-from email_validator import validate_email, EmailNotValidError
-from database import get_session
-from database.models import User
-from routes.auth import get_current_user, require_admin, hash_password
-from routes.helpers import try_parse_uuid
+from routes.auth import get_current_user
+from routes.helpers import try_parse_json_body, try_parse_uuid
+from routes.admin import _validate_changes, _persist_changes
 
 
 routes = web.RouteTableDef()
