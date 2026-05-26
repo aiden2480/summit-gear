@@ -30,12 +30,6 @@
   margin: 0 0 8px 0;
 }
 
-.modal__subtitle {
-  font-size: 14px;
-  color: var(--color-text-secondary);
-  margin: 0 0 20px 0;
-}
-
 .modal__form {
   display: flex;
   flex-direction: column;

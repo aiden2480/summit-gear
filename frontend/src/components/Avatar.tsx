@@ -23,7 +23,7 @@ function gradientFor(id: string): string {
 
 export default function Avatar({ user, size = "md" }: AvatarProps) {
   const initial = (user.username || "?").charAt(0).toUpperCase();
-  const style = user.avatar ? undefined : { background: gradientFor(user.id) };
+  const style = { background: gradientFor(user.id) };
 
   return (
     <div className={`avatar avatar--${size}`} style={style} aria-hidden={user.avatar ? "true" : undefined}>

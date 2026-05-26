@@ -123,9 +123,6 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
       <div className="modal-overlay" onClick={onClose} aria-hidden="true" />
       <div className="modal" role="dialog" aria-modal="true" aria-label="Edit user">
         <h2 className="modal__title">{isSelfTarget ? "Edit Profile" : "Edit User"}</h2>
-        <p className="modal__subtitle">
-          {isSelfTarget ? "Update your account details" : `Editing ${user.username}`}
-        </p>
 
         <div className="modal__avatar-section">
           <Avatar user={avatarPreviewUser} size="lg" />
