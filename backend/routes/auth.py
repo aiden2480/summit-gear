@@ -94,6 +94,7 @@ async def login(request: web.Request) -> web.Response:
         return web.json_response({"error": "Invalid credentials"}, status=401)
 
     token = create_access_token(user.id, user.role)
+    # Todo replace this with user.to_dict() but requires changing frontend references from "user" to "username"
     return web.json_response({"id": str(user.id), "user": user.username, "token": token, "role": user.role, "avatar": user.avatar})
 
 
