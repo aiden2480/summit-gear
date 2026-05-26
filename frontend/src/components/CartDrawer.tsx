@@ -27,7 +27,8 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, select
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
   const { auth } = useAuth();
-  const isViewOnly = !onUpdate && !onRemove && !onClear && !onCheckoutSuccess;
+  //If there is no way to perform an action on the cart itself or items in a cart then we should be viewing the cart in a read-only mode
+  const isReadOnly = !onUpdate || !onRemove || !onClear || !onCheckoutSuccess;
   const hasFooterActions = onCheckoutSuccess || onClear;
 
   const handleOrderClose = useCallback(() => {
@@ -79,7 +80,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, select
     <>
       <div className={`cart-overlay${open ? " cart-overlay--visible" : ""}`} onClick={onClose} aria-hidden="true" />
       <aside
-        className={`cart-drawer${open ? " cart-drawer--open" : ""}${isViewOnly ? " cart-drawer--view-only" : ""}`}
+        className={`cart-drawer${open ? " cart-drawer--open" : ""}${isReadOnly ? " cart-drawer--view-only" : ""}`}
         role="dialog"
         aria-label="Shopping cart"
         aria-modal={open}
@@ -97,7 +98,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, select
             <div className="cart-drawer__empty">
               <img src="/backpack.svg" alt="" className="cart-drawer__empty-img" aria-hidden="true" />
               <p>{selectedUsername ? `${selectedUsername}'s cart is empty` : 'Your cart is empty'}</p>
-              {!isViewOnly && (
+              {!isReadOnly && (
                 <button className="btn btn--primary" onClick={onClose}>
                   Continue Shopping
                 </button>

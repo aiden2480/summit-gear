@@ -8,7 +8,8 @@ interface CartItemEntryProps {
 }
 
 export default function CartItemEntry({ item, onUpdate, onRemove }: CartItemEntryProps) {
-  const isReadOnly = !onUpdate && !onRemove;
+  //If any action is unavailable, then we should view the cart items in a read-only mode
+  const isReadOnly = !onUpdate || !onRemove;
 
   return (
     <li className={`cart-item${isReadOnly ? " cart-item--readonly" : ""}`}>
@@ -16,8 +17,8 @@ export default function CartItemEntry({ item, onUpdate, onRemove }: CartItemEntr
       <div className="cart-item__info">
         <h4 className="cart-item__name">{item.name}</h4>
         <span className="cart-item__price">${(item.price * item.quantity).toFixed(2)}</span>
-        {onUpdate && (
           <div className="cart-item__controls">
+          {onUpdate && 
             <button
               className="cart-item__qty-btn"
               onClick={() => void onUpdate(item.id, item.quantity - 1)}
@@ -25,8 +26,9 @@ export default function CartItemEntry({ item, onUpdate, onRemove }: CartItemEntr
               aria-label={`Decrease quantity of ${item.name}`}
             >
               −
-            </button>
-            <span className="cart-item__qty" aria-label={`Quantity: ${item.quantity}`}>{item.quantity}</span>
+            </button>}
+            <span className="cart-item__qty" aria-label={`Quantity: ${item.quantity}`}>{isReadOnly ? `Quantity: ${item.quantity}` : item.quantity}</span>
+          {onUpdate && 
             <button
               className="cart-item__qty-btn"
               onClick={() => void onUpdate(item.id, item.quantity + 1)}
@@ -34,9 +36,8 @@ export default function CartItemEntry({ item, onUpdate, onRemove }: CartItemEntr
               aria-label={`Increase quantity of ${item.name}`}
             >
               +
-            </button>
+            </button>}
           </div>
-        )}
       </div>
       {onRemove && (
         <button
