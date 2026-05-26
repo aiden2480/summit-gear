@@ -108,3 +108,8 @@
   align-items: flex-start;
   gap: 8px;
 }
+
+.modal__avatar-buttons {
+  display: flex;
+  gap: 8px;
+}

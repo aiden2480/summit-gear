@@ -134,24 +134,26 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
               onChange={handleFileChange}
               style={{ display: "none" }}
             />
-            <button
-              type="button"
-              className="btn btn--success btn--small"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={submitting}
-            >
-              {hasAvatar ? "Change photo" : "Upload photo"}
-            </button>
-            {hasAvatar && (
+            <div className="modal__avatar-buttons">
               <button
                 type="button"
-                className="btn btn--danger btn--small"
-                onClick={handleRemoveAvatar}
+                className="btn btn--success btn--small"
+                onClick={() => fileInputRef.current?.click()}
                 disabled={submitting}
               >
-                Remove photo
+                Upload photo
               </button>
-            )}
+              {hasAvatar && (
+                <button
+                  type="button"
+                  className="btn btn--danger btn--small"
+                  onClick={handleRemoveAvatar}
+                  disabled={submitting}
+                >
+                  Remove photo
+                </button>
+              )}
+            </div>
             <span className="modal__hint">PNG or JPEG, up to 2 MB</span>
           </div>
         </div>
