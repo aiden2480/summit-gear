@@ -62,7 +62,7 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
     setError(null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     setError(null);
 
