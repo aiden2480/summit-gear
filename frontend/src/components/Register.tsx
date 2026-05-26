@@ -1,39 +1,35 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { authApi } from '../services/api';
+import Toast from './Toast';
+import useToast from '../hooks/useToast';
 import './Login.css';
-
-const API_BASE_URL = 'http://localhost:8080';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { toasts, addToast } = useToast();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     if (email.trim() && password.trim()) {
       try {
-        const response = await fetch(API_BASE_URL + '/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: email, password }),
-        });
-        if (response.ok) {
-          navigate('/login', { replace: true });
+        await authApi.register(email, password);
+        navigate('/login', { replace: true });
+      } catch (err) {
+        if (err instanceof Error) {
+          addToast(err.message, 'error');
         } else {
-          const err = await response.json();
-          setError(err.error || 'Registration failed. Please try again.');
+          addToast('Error registering. Please try again.', 'error');
         }
-      } catch {
-        setError('Error registering. Please try again.');
       }
     }
   };
 
   return (
     <div className="login-container">
+      <Toast toasts={toasts} />
       <div className="login-card">
         <div className="login-header">
           <img src="/sunrise.svg" alt="Summit Gear" className="login-logo-img" />
@@ -67,7 +63,6 @@ const Register = () => {
           </div>
 
           <button type="submit" className="login-button">Sign Up</button>
-          {error && <p className="login-error">{error}</p>}
         </form>
 
         <div className="login-footer">

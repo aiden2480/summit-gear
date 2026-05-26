@@ -29,6 +29,37 @@ const del = <T>(url: string, token: string | null = null) => request<T>(url, tok
 const putMultipart = <T>(url: string, formData: FormData, token: string | null = null) =>
   request<T>(url, token, { method: "PUT", body: formData });
 
+export const authApi = {
+  login: (username: string, password: string) => {
+    const headers = new Headers({ "Content-Type": "application/json" });
+    return fetch(`http://localhost:8080/login`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ username, password }),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Request failed with status ${res.status}`);
+      }
+      return res.json();
+    });
+  },
+  register: (username: string, password: string) => {
+    const headers = new Headers({ "Content-Type": "application/json" });
+    return fetch(`http://localhost:8080/register`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ username, password }),
+    }).then(async (res) => {
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Request failed with status ${res.status}`);
+      }
+      return res.json();
+    });
+  },
+};
+
 export const productApi = {
   getAll: (category?: string, search?: string) => {
     const params = new URLSearchParams();

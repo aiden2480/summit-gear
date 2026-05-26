@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { userApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
@@ -34,6 +34,17 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
 
   const isSelfTarget = auth.userId === user.id;
   const showRoleField = auth.role === "admin" && !isSelfTarget;
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

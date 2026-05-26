@@ -1,40 +1,38 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authApi } from '../services/api';
+import Toast from './Toast';
+import useToast from '../hooks/useToast';
 import './Login.css';
-
-const API_BASE_URL = 'http://localhost:8080';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { toasts, addToast } = useToast();
 
   const handleLogin = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (email.trim() && password.trim()) {
       try {
-        const response = await fetch(API_BASE_URL + '/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: email, password }),
-        });
-        if (response.ok) {
-          const data = await response.json();
-          login(data.user, data.token, data.role, data.id, data.avatar);
-          navigate('/', { replace: true });
+        const data = await authApi.login(email, password);
+        login(data.user, data.token, data.role, data.id, data.avatar);
+        navigate('/', { replace: true });
+      } catch (err) {
+        if (err instanceof Error) {
+          addToast(err.message, 'error');
         } else {
-          alert('Login failed. Please check your credentials.');
+          addToast('Error logging in. Please try again.', 'error');
         }
-      } catch {
-        alert('Error logging in. Please try again.');
       }
     }
   };
 
   return (
     <div className="login-container">
+      <Toast toasts={toasts} />
       <div className="login-card">
         <div className="login-header">
           <img src="/sunrise.svg" alt="Summit Gear" className="login-logo-img" />
