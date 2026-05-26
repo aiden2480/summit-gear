@@ -3,13 +3,13 @@ import Avatar from "./Avatar";
 import "./Header.css";
 
 interface HeaderProps {
-  cartCount: number;
-  onCartClick: () => void;
+  cartCount?: number;
+  onCartClick?: () => void;
   onLogout: () => void;
   onProfileClick?: () => void;
 }
 
-export default function Header({ cartCount, onCartClick, onLogout, onProfileClick }: HeaderProps) {
+export default function Header({ cartCount = 0, onCartClick, onLogout, onProfileClick }: HeaderProps) {
   const { auth } = useAuth();
 
   return (
