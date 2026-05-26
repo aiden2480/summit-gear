@@ -48,7 +48,7 @@ export default function UserCard({ user, onEdit, onDelete, openCart }: UserCardP
             Delete
           </button>
         )}
-        {user.role != "admin" && (
+        {user.role !== "admin" && (
           <button
             type="button"
             className="btn btn--info btn--small"

@@ -29,7 +29,7 @@ export default function UserGrid({ onViewCart, addToast }: UserGridProps) {
       setUsers(gottenUsers);
     }
     catch (e) {
-      console.log(e);
+      console.error(e);
       setError("Unable to load users.");
     }
     finally {

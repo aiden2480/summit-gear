@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { authApi } from '../services/api';
 import './Login.css';
-
-const API_BASE_URL = 'http://localhost:8080';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -10,24 +9,15 @@ const Register = () => {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.SubmitEvent) => {
     e.preventDefault();
     setError('');
     if (email.trim() && password.trim()) {
       try {
-        const response = await fetch(API_BASE_URL + '/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: email, password }),
-        });
-        if (response.ok) {
-          navigate('/login', { replace: true });
-        } else {
-          const err = await response.json();
-          setError(err.error || 'Registration failed. Please try again.');
-        }
-      } catch {
-        setError('Error registering. Please try again.');
+        await authApi.register(email, password);
+        navigate('/login', { replace: true });
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
       }
     }
   };

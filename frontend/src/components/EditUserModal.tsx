@@ -62,7 +62,7 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
     setError(null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     setError(null);
 
@@ -106,10 +106,10 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
       
       onSaved(updatedUser);
       onClose();
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Failed to update user";
+      setError(msg);
+      addToast(msg, "error");
     } finally {
       setSubmitting(false);
     }

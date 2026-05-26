@@ -46,8 +46,6 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
     <div>
       <Header
         onLogout={logoutFunc}
-        cartCount={0}
-        onCartClick={() => {}}
         onProfileClick={() => setProfileOpen(true)}
       />
       <main style={{ padding: "2rem" }}>

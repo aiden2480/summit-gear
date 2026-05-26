@@ -7,6 +7,7 @@ from aiohttp import web
 from datetime import datetime, timedelta, timezone
 from email_validator import validate_email, EmailNotValidError
 from sqlmodel import select
+from sqlalchemy import func
 from database import get_session
 from database.models import User
 from routes.helpers import try_parse_json_body
@@ -82,12 +83,15 @@ async def login(request: web.Request) -> web.Response:
         return web.json_response({"error": "Username and password required"}, status=400)
 
     try:
-        validate_email(username, check_deliverability=False)
+        valid = validate_email(username, check_deliverability=False)
+        username = valid.normalized
     except EmailNotValidError as e:
         return web.json_response({"error": f"Invalid email address: {e}"}, status=400)
 
     async with get_session() as session:
-        result = await session.execute(select(User).where(User.username == username))
+        result = await session.execute(
+            select(User).where(func.lower(User.username) == username.lower())
+        )
         user = result.scalars().first()
 
     if not user or not verify_password(password, user.hashed_password):
@@ -111,12 +115,15 @@ async def register(request: web.Request) -> web.Response:
         return web.json_response({"error": "Password must be at least 8 characters"}, status=400)
 
     try:
-        validate_email(username, check_deliverability=False)
+        valid = validate_email(username, check_deliverability=False)
+        username = valid.normalized
     except EmailNotValidError as e:
         return web.json_response({"error": f"Invalid email address: {e}"}, status=400)
 
     async with get_session() as session:
-        result = await session.execute(select(User).where(User.username == username))
+        result = await session.execute(
+            select(User).where(func.lower(User.username) == username.lower())
+        )
         if result.scalars().first():
             return web.json_response({"error": "Username already exists"}, status=409)
 

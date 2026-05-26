@@ -60,6 +60,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("auth:unauthorized", logout);
   }, []);
 
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.storageArea !== localStorage) return;
+      if (!e.key || ["user", "userId", "token", "role"].includes(e.key)) {
+        setAuth({
+          user: localStorage.getItem("user"),
+          userId: localStorage.getItem("userId"),
+          token: localStorage.getItem("token"),
+          role: localStorage.getItem("role"),
+        });
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   return (
     <AuthContext value={{ auth, getLoggedInUser, login, logout }}>
       {children}
