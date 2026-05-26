@@ -2,10 +2,42 @@ import { CartItem, UpdateUserPayload, User } from "../types"
 
 const API_BASE = "http://localhost:8080/api";
 
+export class ApiError extends Error {
+  status: number;
+  body: unknown;
+
+  constructor(status: number, message: string, body: unknown = null) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.body = body;
+  }
+}
+
+async function parseError(res: Response): Promise<{ message: string; body: unknown }> {
+  const text = await res.text();
+  if (!text) {
+    return { message: `Request failed with status ${res.status}`, body: null };
+  }
+  try {
+    const data = JSON.parse(text);
+    const message =
+      (data && typeof data.error === "string" && data.error) ||
+      (data && typeof data.message === "string" && data.message) ||
+      `Request failed with status ${res.status}`;
+    return { message, body: data };
+  } catch {
+    return { message: text, body: text };
+  }
+}
+
 async function request<T>(url: string, token: string | null, options: RequestInit = {}): Promise<T> {
   const headers = new Headers();
   if (token) {
     headers.append("Authorization", `Bearer ${token}`);
+  }
+  if (typeof options.body === "string" && !headers.has("Content-Type")) {
+    headers.append("Content-Type", "application/json");
   }
 
   const res = await fetch(`${API_BASE}${url}`, { headers, ...options });
@@ -14,8 +46,8 @@ async function request<T>(url: string, token: string | null, options: RequestIni
     if (res.status === 401) {
       window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     }
-    const text = await res.text();
-    throw new Error(text || `Request failed with status ${res.status}`);
+    const { message, body } = await parseError(res);
+    throw new ApiError(res.status, message, body);
   }
 
   return res.json() as Promise<T>;
@@ -81,14 +113,8 @@ async function authRequest<T>(path: string, body: unknown): Promise<T> {
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    let message = `Request failed with status ${res.status}`;
-    try {
-      const data = await res.json();
-      if (data && typeof data.error === "string") message = data.error;
-    } catch {
-      // non-JSON response, fall back to default
-    }
-    throw new Error(message);
+    const { message, body: errBody } = await parseError(res);
+    throw new ApiError(res.status, message, errBody);
   }
   return res.json() as Promise<T>;
 }
