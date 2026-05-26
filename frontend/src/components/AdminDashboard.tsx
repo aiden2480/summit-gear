@@ -63,7 +63,6 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
       {profileOpen && auth.user && auth.userId && auth.role && (
           <EditUserModal
             user={{ id: auth.userId, username: auth.user, role: auth.role as "admin" | "user" }}
-            isAdminMode={false}
             onClose={() => setProfileOpen(false)}
             onSaved={() => setProfileOpen(false)}
             addToast={addToast}

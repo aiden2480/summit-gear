@@ -9,7 +9,6 @@ import "./EditUserModal.css";
 
 interface EditUserModalProps {
   user: User;
-  isAdminMode: boolean;
   onClose: () => void;
   onSaved: (updated: User) => void;
   addToast: (message: string, type?: ToastType) => void;
@@ -18,7 +17,7 @@ interface EditUserModalProps {
 const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg"];
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
-export default function EditUserModal({ user: initialUser, isAdminMode, onClose, onSaved, addToast }: EditUserModalProps) {
+export default function EditUserModal({ user: initialUser, onClose, onSaved, addToast }: EditUserModalProps) {
   const { auth, login } = useAuth();
   const [user] = useState<User>(initialUser);
   const [email, setEmail] = useState(initialUser.username);
@@ -32,7 +31,7 @@ export default function EditUserModal({ user: initialUser, isAdminMode, onClose,
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const isSelfTarget = auth.userId === user.id;
-  const showRoleField = isAdminMode && !isSelfTarget;
+  const showRoleField = auth.role === "admin" && !isSelfTarget;
 
   function extractErrorMessage(e: unknown, fallback: string) {
     let msg = e instanceof Error ? e.message : fallback;
@@ -103,7 +102,7 @@ export default function EditUserModal({ user: initialUser, isAdminMode, onClose,
     setSubmitting(true);
 
     try {
-      const updatedUser = !isAdminMode
+      const updatedUser = isSelfTarget
         ? await userApi.updateSelf(payload, auth.token)
         : await userApi.updateUser(user.id, payload, auth.token);
 
@@ -130,9 +129,9 @@ export default function EditUserModal({ user: initialUser, isAdminMode, onClose,
     <>
       <div className="modal-overlay" onClick={onClose} aria-hidden="true" />
       <div className="modal" role="dialog" aria-modal="true" aria-label="Edit user">
-        <h2 className="modal__title">{!isAdminMode ? "Edit Profile" : "Edit User"}</h2>
+        <h2 className="modal__title">{isSelfTarget ? "Edit Profile" : "Edit User"}</h2>
         <p className="modal__subtitle">
-          {!isAdminMode ? "Update your account details" : `Editing ${user.username}`}
+          {isSelfTarget ? "Update your account details" : `Editing ${user.username}`}
         </p>
 
         <div className="modal__avatar-section">
