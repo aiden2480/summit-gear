@@ -9,8 +9,8 @@ routes = web.RouteTableDef()
 @routes.put("/api/users/me")
 async def update_self(request: web.Request) -> web.Response:
     caller = await get_current_user(request)
-    fields, avatar_data, avatar_mime, remove_avatar = await _parse_multipart(request)
-    changes, err = _validate_changes(fields, allow_role_change=False)
+    payload = await _parse_multipart(request)
+    err = _validate_changes(payload, allow_role_change=False)
     if err is not None:
         return err
-    return await _persist_changes(caller["user_id"], changes, avatar_data, avatar_mime, remove_avatar)
+    return await _persist_changes(caller["user_id"], payload)

@@ -1,4 +1,5 @@
 import uuid
+from dataclasses import dataclass
 from typing import Optional
 from aiohttp import web
 from sqlmodel import select
@@ -7,114 +8,78 @@ from email_validator import validate_email, EmailNotValidError
 from database import get_session
 from database.models import User
 from routes.auth import require_admin, hash_password
-from routes.helpers import try_parse_uuid
+from routes.helpers import try_parse_multipart, try_parse_uuid, try_read_bytes
 
 
 routes = web.RouteTableDef()
 
 
-def _validate_changes(data: dict, allow_role_change: bool):
-    """Validate the request body. Returns (changes, None) on success
-    or (None, error_response) on validation failure."""
-    new_email = data.get("email")
-    new_password = data.get("password")
-    new_role = data.get("role")
+@dataclass
+class UpdateUserPayload:
+    email: Optional[str] = None
+    password: Optional[str] = None
+    role: Optional[str] = None
+    avatar_data: Optional[bytes] = None
+    avatar_mime: Optional[str] = None
+    remove_avatar: bool = False
 
-    if new_role is not None and not allow_role_change:
-        return None, web.json_response({"error": "Only admins can change roles"}, status=403)
 
-    if new_role is not None and new_role not in ("user", "admin"):
-        return None, web.json_response({"error": "Invalid role"}, status=400)
+def _validate_changes(payload: UpdateUserPayload, allow_role_change: bool) -> Optional[web.Response]:
+    if payload.role is not None and not allow_role_change:
+        return web.json_response({"error": "Only admins can change roles"}, status=403)
 
-    if new_password is not None and len(new_password) < 8:
-        return None, web.json_response({"error": "Password must be at least 8 characters"}, status=400)
+    if payload.role is not None and payload.role not in ("user", "admin"):
+        return web.json_response({"error": "Invalid role"}, status=400)
 
-    if new_email is not None:
-        new_email = new_email.strip()
+    if payload.password is not None and len(payload.password) < 8:
+        return web.json_response({"error": "Password must be at least 8 characters"}, status=400)
+
+    if payload.email is not None:
+        payload.email = payload.email.strip()
         try:
-            valid = validate_email(new_email, check_deliverability=False)
-            new_email = valid.normalized
+            valid = validate_email(payload.email, check_deliverability=False)
+            payload.email = valid.normalized
         except EmailNotValidError as e:
-            return None, web.json_response({"error": f"Invalid email address: {e}"}, status=400)
+            return web.json_response({"error": f"Invalid email address: {e}"}, status=400)
 
-    return {"email": new_email, "password": new_password, "role": new_role}, None
+    return None
 
 
 _ALLOWED_AVATAR_MIMES = {"image/png", "image/jpeg"}
 _MAX_AVATAR_BYTES = 2 * 1024 * 1024
-_PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
-_JPEG_MAGIC = b"\xff\xd8\xff"
 
 
-def _sniff_mime(data: bytes) -> Optional[str]:
-    if data.startswith(_PNG_MAGIC):
-        return "image/png"
-    if data.startswith(_JPEG_MAGIC):
-        return "image/jpeg"
-    return None
+async def _parse_multipart(request: web.Request) -> UpdateUserPayload:
+    reader = await try_parse_multipart(request)
+    payload = UpdateUserPayload()
 
-
-async def _parse_multipart(request: web.Request) -> tuple[dict, Optional[bytes], Optional[str], bool]:
-    try:
-        reader = await request.multipart()
-    except Exception:
-        raise web.HTTPBadRequest(text="Expected multipart/form-data")
-
-    fields: dict = {}
-    avatar_data: Optional[bytes] = None
-    avatar_mime: Optional[str] = None
-    remove_avatar = False
-
-    field = await reader.next()
-    while field is not None:
-        if field.name == "avatar":
-            declared_mime = (field.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
+    part = await reader.next()
+    while part is not None:
+        if part.name == "avatar":
+            declared_mime = (part.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
             if declared_mime not in _ALLOWED_AVATAR_MIMES:
                 raise web.HTTPBadRequest(text="Only PNG and JPEG images are allowed")
-            buf = bytearray()
-            while True:
-                chunk = await field.read_chunk(64 * 1024)
-                if not chunk:
-                    break
-                buf.extend(chunk)
-                if len(buf) > _MAX_AVATAR_BYTES:
-                    raise web.HTTPRequestEntityTooLarge(
-                        max_size=_MAX_AVATAR_BYTES, actual_size=len(buf), text="Image must be 2 MB or smaller"
-                    )
-            if not buf:
+            
+            data = await try_read_bytes(part, max_size=_MAX_AVATAR_BYTES)
+
+            if not data:
                 raise web.HTTPBadRequest(text="Empty upload")
-            sniffed = _sniff_mime(bytes(buf))
-            if sniffed is None or sniffed != declared_mime:
-                raise web.HTTPBadRequest(text="File contents do not match a PNG or JPEG image")
-            avatar_data = bytes(buf)
-            avatar_mime = sniffed
+            payload.avatar_data = data
+            payload.avatar_mime = declared_mime
         else:
-            value = await field.text()
-            fields[field.name] = value
-        field = await reader.next()
+            value = await part.text()
+            setattr(payload, part.name, value or None)
+        part = await reader.next()
 
-    if fields.get("remove_avatar", "").lower() == "true":
-        remove_avatar = True
-        avatar_data = None
-        avatar_mime = None
+    if payload.remove_avatar:
+        payload.avatar_data = None
+        payload.avatar_mime = None
 
-    return fields, avatar_data, avatar_mime, remove_avatar
+    return payload
 
 
-async def _persist_changes(
-    target_uuid: uuid.UUID,
-    changes: dict,
-    avatar_data: Optional[bytes] = None,
-    avatar_mime: Optional[str] = None,
-    remove_avatar: bool = False,
-) -> web.Response:
-    if (
-        changes["email"] is None
-        and changes["password"] is None
-        and changes["role"] is None
-        and avatar_data is None
-        and not remove_avatar
-    ):
+async def _persist_changes(target_uuid: uuid.UUID, payload: UpdateUserPayload) -> web.Response:
+    if not any([payload.email, payload.password, payload.role, payload.avatar_data, payload.remove_avatar]):
         return web.json_response({"error": "No changes provided"}, status=400)
 
     async with get_session() as session:
@@ -124,7 +89,7 @@ async def _persist_changes(
         if not user:
             raise web.HTTPNotFound(text="User not found")
 
-        new_email = changes["email"]
+        new_email = payload.email
         if new_email is not None and new_email.lower() != user.username.lower():
             existing = await session.execute(
                 select(User).where(func.lower(User.username) == new_email.lower())
@@ -133,16 +98,16 @@ async def _persist_changes(
                 return web.json_response({"error": "Email already in use"}, status=409)
             user.username = new_email
 
-        if changes["password"] is not None:
-            user.hashed_password = hash_password(changes["password"])
+        if payload.password is not None:
+            user.hashed_password = hash_password(payload.password)
 
-        if changes["role"] is not None:
-            user.role = changes["role"]
+        if payload.role is not None:
+            user.role = payload.role
 
-        if avatar_data is not None:
-            user.avatar_data = avatar_data
-            user.avatar_mime = avatar_mime
-        elif remove_avatar:
+        if payload.avatar_data is not None:
+            user.avatar_data = payload.avatar_data
+            user.avatar_mime = payload.avatar_mime
+        elif payload.remove_avatar:
             user.avatar_data = None
             user.avatar_mime = None
 
@@ -166,16 +131,13 @@ async def get_all_users(request: web.Request) -> web.Response:
 async def update_user(request: web.Request) -> web.Response:
     target_uuid = try_parse_uuid(request.match_info["user_id"])
     caller = request["user"]
-    fields, avatar_data, avatar_mime, remove_avatar = await _parse_multipart(request)
-
-    changes, err = _validate_changes(fields, allow_role_change=True)
+    payload = await _parse_multipart(request)
+    err = _validate_changes(payload, allow_role_change=True)
     if err is not None:
         return err
-
-    if changes["role"] is not None and caller["user_id"] == target_uuid:
+    if payload.role is not None and caller["user_id"] == target_uuid:
         return web.json_response({"error": "Admins cannot change their own role"}, status=400)
-
-    return await _persist_changes(target_uuid, changes, avatar_data, avatar_mime, remove_avatar)
+    return await _persist_changes(target_uuid, payload)
 
 
 @routes.delete("/api/users/{user_id}")
