@@ -24,9 +24,15 @@ async def try_parse_multipart(request: web.Request) -> MultipartReader:
 
 
 async def try_read_bytes(reader: BodyPartReader, *, max_size: int) -> bytes:
-    data = await reader.read_chunk(max_size + 1)
+    buffer = bytearray()
 
-    if len(data) > max_size:
-        raise web.HTTPRequestEntityTooLarge(max_size, actual_size=len(data))
+    # By reading the packet in chunks, we can determine if it is too large
+    # without actually loading the whole packet. This prevents DOS attacks
+    # by trying to upload large files
+    while chunk := await reader.read_chunk():
+        buffer.extend(chunk)
 
-    return data
+        if len(buffer) > max_size:
+            raise web.HTTPRequestEntityTooLarge(max_size, actual_size=len(buffer))
+
+    return bytes(buffer)
