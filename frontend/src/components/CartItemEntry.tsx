@@ -28,7 +28,7 @@ export default function CartItemEntry({ item, onUpdate, onRemove }: CartItemEntr
             >
               −
             </button>}
-            <span className="cart-item__qty" aria-label={`Quantity: ${item.quantity}`}>{(!isReadOnly ? "" : "Quantity: ") + item.quantity}</span>
+            <span className="cart-item__qty" aria-label={`Quantity: ${item.quantity}`}>{isReadOnly ? `Quantity: ${item.quantity}` : item.quantity}</span>
           {onUpdate && 
             <button
               className="cart-item__qty-btn"
