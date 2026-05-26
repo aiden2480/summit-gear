@@ -23,6 +23,11 @@ class UpdateUserPayload:
     avatar_mime: Optional[str] = None
     remove_avatar: bool = False
 
+    @property
+    def is_empty(self):
+        """If the request body was empty, no changes were requested from the caller"""
+        return not any([self.email, self.password, self.role, self.avatar_data, self.avatar_mime, self.remove_avatar])
+
 
 def _validate_changes(payload: UpdateUserPayload, allow_role_change: bool) -> Optional[web.Response]:
     if payload.role is not None and not allow_role_change:
@@ -51,25 +56,29 @@ _MAX_AVATAR_BYTES = 2 * 1024 * 1024
 
 async def _parse_multipart(request: web.Request) -> UpdateUserPayload:
     reader = await try_parse_multipart(request)
-    payload = UpdateUserPayload()
+    data: dict = {}
 
-    part = await reader.next()
-    while part is not None:
-        if part.name == "avatar":
-            declared_mime = (part.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
-            if declared_mime not in _ALLOWED_AVATAR_MIMES:
-                raise web.HTTPBadRequest(text="Only PNG and JPEG images are allowed")
-            
-            data = await try_read_bytes(part, max_size=_MAX_AVATAR_BYTES)
+    while (part := await reader.next()) is not None:
+        if part.name != "avatar":
+            data[part.name] = await part.text()
+            continue
 
-            if not data:
-                raise web.HTTPBadRequest(text="Empty upload")
-            payload.avatar_data = data
-            payload.avatar_mime = declared_mime
-        else:
-            value = await part.text()
-            setattr(payload, part.name, value or None)
-        part = await reader.next()
+        mime = part.headers.get("Content-Type", "")
+
+        if mime not in _ALLOWED_AVATAR_MIMES:
+            raise web.HTTPBadRequest(text=f"Mime {mime} is not permitted for avatar upload")
+
+        data["avatar_data"] = await try_read_bytes(part, max_size=_MAX_AVATAR_BYTES)
+        data["avatar_mime"] = mime
+
+    payload = UpdateUserPayload(
+        email=data.get("email"),
+        password=data.get("password"),
+        role=data.get("role"),
+        avatar_data=data.get("avatar_data"),
+        avatar_mime=data.get("avatar_mime"),
+        remove_avatar=data.get("remove_avatar", "").lower() == "true",
+    )
 
     if payload.remove_avatar:
         payload.avatar_data = None
@@ -79,7 +88,7 @@ async def _parse_multipart(request: web.Request) -> UpdateUserPayload:
 
 
 async def _persist_changes(target_uuid: uuid.UUID, payload: UpdateUserPayload) -> web.Response:
-    if not any([payload.email, payload.password, payload.role, payload.avatar_data, payload.remove_avatar]):
+    if payload.is_empty:
         return web.json_response({"error": "No changes provided"}, status=400)
 
     async with get_session() as session:

@@ -2,13 +2,13 @@ import { useRef, useState } from "react";
 import { userApi } from "../services/api";
 import { useAuth } from "../context/AuthContext";
 import Avatar from "./Avatar";
-import type { User, ToastType } from "../types";
+import type { User, ToastType, UpdateUserPayload } from "../types";
 import "./UserCard.css";
 import "./Header.css";
 import "./EditUserModal.css";
 
 interface EditUserModalProps {
-  user: User;
+  user?: User;
   onClose: () => void;
   onSaved: (updated: User) => void;
   addToast: (message: string, type?: ToastType) => void;
@@ -17,8 +17,10 @@ interface EditUserModalProps {
 const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg"];
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
-export default function EditUserModal({ user: initialUser, onClose, onSaved, addToast }: EditUserModalProps) {
-  const { auth, login } = useAuth();
+export default function EditUserModal({ user: userProp, onClose, onSaved, addToast }: EditUserModalProps) {
+  const { auth, getLoggedInUser, login } = useAuth();
+  const initialUser = userProp ?? getLoggedInUser();
+
   const [user] = useState<User>(initialUser);
   const [email, setEmail] = useState(initialUser.username);
   const [password, setPassword] = useState("");
@@ -32,17 +34,6 @@ export default function EditUserModal({ user: initialUser, onClose, onSaved, add
 
   const isSelfTarget = auth.userId === user.id;
   const showRoleField = auth.role === "admin" && !isSelfTarget;
-
-  function extractErrorMessage(e: unknown, fallback: string) {
-    let msg = e instanceof Error ? e.message : fallback;
-    try {
-      const parsed = JSON.parse(msg);
-      if (parsed && typeof parsed.error === "string") msg = parsed.error;
-    } catch {
-      // not JSON
-    }
-    return msg;
-  }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -76,12 +67,7 @@ export default function EditUserModal({ user: initialUser, onClose, onSaved, add
     setError(null);
 
     const trimmedEmail = email.trim();
-    const payload: Parameters<typeof userApi.updateSelf>[0] = {};
-
-    if (Object.keys(payload).length === 0) {
-      setError("No changes to save");
-      return;
-    }
+    const payload: UpdateUserPayload = {};
 
     if (password.length > 0 && password.length < 8) {
       setError("Password must be at least 8 characters");
@@ -99,6 +85,11 @@ export default function EditUserModal({ user: initialUser, onClose, onSaved, add
     if (removeAvatar)
       payload.removeAvatar = removeAvatar;
 
+    if (Object.keys(payload).length === 0) {
+      setError("No changes to save");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -112,11 +103,13 @@ export default function EditUserModal({ user: initialUser, onClose, onSaved, add
       if (isSelfTarget) {
         login(updatedUser.username, auth.token!, updatedUser.role, updatedUser.id, updatedUser.avatar);
       }
+      
       onSaved(updatedUser);
       onClose();
     } catch (err) {
-      const msg = extractErrorMessage(err, "Failed to save changes");
-      setError(msg);
+      if (err instanceof Error) {
+        setError(err.message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -200,8 +193,8 @@ export default function EditUserModal({ user: initialUser, onClose, onSaved, add
                 value={role}
                 onChange={(e) => setRole(e.target.value as "user" | "admin")}
               >
-                <option value="user">user</option>
-                <option value="admin">admin</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
           )}

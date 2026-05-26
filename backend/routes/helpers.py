@@ -28,5 +28,5 @@ async def try_read_bytes(reader: BodyPartReader, *, max_size: int) -> bytes:
 
     if len(data) > max_size:
         raise web.HTTPRequestEntityTooLarge(max_size, actual_size=len(data))
-    
+
     return data

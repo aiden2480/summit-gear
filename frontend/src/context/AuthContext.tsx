@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import type { User } from "../types";
 
 interface AuthState {
   user: string | null;
@@ -10,6 +11,7 @@ interface AuthState {
 
 interface AuthContextType {
   auth: AuthState;
+  getLoggedInUser: () => User;
   login: (user: string, token: string, role: string, userId: string, avatar?: string | null) => void;
   logout: () => void;
 }
@@ -24,6 +26,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     role: localStorage.getItem("role"),
     avatar: localStorage.getItem("avatar"),
   });
+
+  const getLoggedInUser = (): User => {
+    return {
+      id: auth.userId!,
+      username: auth.user!,
+      role: auth.role as "admin" | "user",
+      avatar: auth.avatar ?? null,
+    };
+  }
 
   const login = (user: string, token: string, role: string, userId: string, avatar: string | null = null) => {
     localStorage.setItem("user", user);
@@ -50,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext value={{ auth, login, logout }}>
+    <AuthContext value={{ auth, getLoggedInUser, login, logout }}>
       {children}
     </AuthContext>
   );
