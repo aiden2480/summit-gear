@@ -42,7 +42,7 @@ export default function Header({ cartCount, onCartClick, onLogout, onProfileClic
                 <img src="/backpack.svg" alt="" className="btn__cart-img" />
               </span>
               Cart
-              {cartCount > -1 && <span className="header__badge">{cartCount}</span>}
+              {cartCount > 0 && <span className="header__badge">{cartCount}</span>}
             </button> 
           }
           {onLogout && (
