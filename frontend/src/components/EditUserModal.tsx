@@ -9,7 +9,7 @@ import "./EditUserModal.css";
 
 interface EditUserModalProps {
   user: User;
-  mode: "self" | "admin";
+  isAdminMode: boolean;
   onClose: () => void;
   onSaved: (updated: User) => void;
   addToast: (message: string, type?: ToastType) => void;
@@ -18,8 +18,8 @@ interface EditUserModalProps {
 const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg"];
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
-export default function EditUserModal({ user: initialUser, mode, onClose, onSaved, addToast }: EditUserModalProps) {
-  const { auth, login, setAvatar } = useAuth();
+export default function EditUserModal({ user: initialUser, isAdminMode, onClose, onSaved, addToast }: EditUserModalProps) {
+  const { auth, login } = useAuth();
   const [user] = useState<User>(initialUser);
   const [email, setEmail] = useState(initialUser.username);
   const [password, setPassword] = useState("");
@@ -31,8 +31,8 @@ export default function EditUserModal({ user: initialUser, mode, onClose, onSave
   const [removeAvatar, setRemoveAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const isSelfTarget = auth.user === user.username;
-  const showRoleField = mode === "admin" && !isSelfTarget;
+  const isSelfTarget = auth.userId === user.id;
+  const showRoleField = isAdminMode && !isSelfTarget;
 
   function extractErrorMessage(e: unknown, fallback: string) {
     let msg = e instanceof Error ? e.message : fallback;
@@ -79,36 +79,45 @@ export default function EditUserModal({ user: initialUser, mode, onClose, onSave
     const trimmedEmail = email.trim();
     const payload: Parameters<typeof userApi.updateSelf>[0] = {};
 
-    if (trimmedEmail !== user.username) payload.email = trimmedEmail;
-    if (password.length > 0) {
-      if (password.length < 8) { setError("Password must be at least 8 characters"); return; }
-      payload.password = password;
+    if (Object.keys(payload).length === 0) {
+      setError("No changes to save");
+      return;
     }
-    if (showRoleField && role !== user.role) payload.role = role;
-    if (pendingFile) payload.avatar = pendingFile;
-    if (removeAvatar) payload.removeAvatar = true;
 
-    if (Object.keys(payload).length === 0) { setError("No changes to save"); return; }
+    if (password.length > 0 && password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    if (password.length > 0)
+      payload.password = password;
+    if (trimmedEmail !== user.username)
+      payload.email = trimmedEmail;
+    if (showRoleField && role !== user.role)
+      payload.role = role;
+    if (pendingFile)
+      payload.avatar = pendingFile;
+    if (removeAvatar)
+      payload.removeAvatar = removeAvatar;
 
     setSubmitting(true);
+
     try {
-      const updated = mode === "self"
+      const updatedUser = !isAdminMode
         ? await userApi.updateSelf(payload, auth.token)
         : await userApi.updateUser(user.id, payload, auth.token);
+
       addToast("Saved successfully", "success");
+
+      // If we are editing ourself, call login again so we can update the header icon
       if (isSelfTarget) {
-        if (updated.username !== auth.user) {
-          login(updated.username, auth.token!, updated.role, updated.id, updated.avatar);
-        } else {
-          setAvatar(updated.avatar);
-        }
+        login(updatedUser.username, auth.token!, updatedUser.role, updatedUser.id, updatedUser.avatar);
       }
-      onSaved(updated);
+      onSaved(updatedUser);
       onClose();
     } catch (err) {
       const msg = extractErrorMessage(err, "Failed to save changes");
       setError(msg);
-      addToast(msg, "error");
     } finally {
       setSubmitting(false);
     }
@@ -121,9 +130,9 @@ export default function EditUserModal({ user: initialUser, mode, onClose, onSave
     <>
       <div className="modal-overlay" onClick={onClose} aria-hidden="true" />
       <div className="modal" role="dialog" aria-modal="true" aria-label="Edit user">
-        <h2 className="modal__title">{mode === "self" ? "Edit Profile" : "Edit User"}</h2>
+        <h2 className="modal__title">{!isAdminMode ? "Edit Profile" : "Edit User"}</h2>
         <p className="modal__subtitle">
-          {mode === "self" ? "Update your account details" : `Editing ${user.username}`}
+          {!isAdminMode ? "Update your account details" : `Editing ${user.username}`}
         </p>
 
         <div className="modal__avatar-section">

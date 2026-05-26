@@ -2,7 +2,7 @@ import type { User } from "../types";
 import "./Avatar.css";
 
 interface AvatarProps {
-  user: User;
+  user: Pick<User, "id" | "username" | "avatar">;
   size?: "sm" | "md" | "lg";
 }
 

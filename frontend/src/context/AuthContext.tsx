@@ -12,7 +12,6 @@ interface AuthContextType {
   auth: AuthState;
   login: (user: string, token: string, role: string, userId: string, avatar?: string | null) => void;
   logout: () => void;
-  setAvatar: (avatar: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -45,19 +44,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuth({ user: null, userId: null, token: null, role: null, avatar: null });
   };
 
-  const setAvatar = (avatar: string | null) => {
-    if (avatar) localStorage.setItem("avatar", avatar);
-    else localStorage.removeItem("avatar");
-    setAuth((prev) => ({ ...prev, avatar }));
-  };
-
   useEffect(() => {
     window.addEventListener("auth:unauthorized", logout);
     return () => window.removeEventListener("auth:unauthorized", logout);
   }, []);
 
   return (
-    <AuthContext value={{ auth, login, logout, setAvatar }}>
+    <AuthContext value={{ auth, login, logout }}>
       {children}
     </AuthContext>
   );
