@@ -85,7 +85,7 @@ export default function EditUserModal({ user: initialUser, mode, onClose, onSave
       payload.password = password;
     }
     if (showRoleField && role !== user.role) payload.role = role;
-    if (pendingFile) payload.file = pendingFile;
+    if (pendingFile) payload.avatar = pendingFile;
     if (removeAvatar) payload.removeAvatar = true;
 
     if (Object.keys(payload).length === 0) { setError("No changes to save"); return; }

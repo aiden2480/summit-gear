@@ -72,7 +72,7 @@ function buildUpdateForm(payload: UpdateUserPayload): FormData {
   if (payload.email) form.append("email", payload.email);
   if (payload.password) form.append("password", payload.password);
   if (payload.role) form.append("role", payload.role);
-  if (payload.file) form.append("file", payload.file, payload.file.name);
+  if (payload.avatar) form.append("avatar", payload.avatar, payload.avatar.name);
   if (payload.removeAvatar) form.append("remove_avatar", "true");
   return form;
 }

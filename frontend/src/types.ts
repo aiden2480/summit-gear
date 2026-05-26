@@ -38,6 +38,6 @@ export interface UpdateUserPayload {
   email?: string;
   password?: string;
   role?: "user" | "admin";
-  file?: File;
+  avatar?: File;
   removeAvatar?: boolean;
 }

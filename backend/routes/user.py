@@ -56,7 +56,7 @@ async def _parse_multipart(request: web.Request) -> tuple[dict, Optional[bytes],
 
     field = await reader.next()
     while field is not None:
-        if field.name == "file":
+        if field.name == "avatar":
             declared_mime = (field.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
             if declared_mime not in _ALLOWED_AVATAR_MIMES:
                 raise web.HTTPBadRequest(text="Only PNG and JPEG images are allowed")
