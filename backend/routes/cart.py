@@ -4,7 +4,7 @@ from sqlalchemy.orm import joinedload
 from database import get_session
 from database.models import CartItem, Product
 from routes.auth import get_current_user
-from routes.helpers import try_parse_uuid, try_parse_json_body
+from routes.helpers import try_parse_uuid, try_parse_int, try_parse_json_body
 
 routes = web.RouteTableDef()
 
@@ -28,6 +28,8 @@ async def add_to_cart(request : web.Request):
 
     if not product_id:
         raise web.HTTPBadRequest(text="Missing product_id")
+    if not isinstance(quantity, int) or isinstance(quantity, bool):
+        raise web.HTTPBadRequest(text="Quantity must be an integer")
     if quantity < 1:
         raise web.HTTPBadRequest(text="Quantity must be at least 1")
 
@@ -70,12 +72,14 @@ async def add_to_cart(request : web.Request):
 
 @routes.put("/api/cart/{id}")
 async def update_cart_item(request : web.Request):
-    item_id = int(request.match_info["id"])
+    item_id = try_parse_int(request.match_info["id"], field="cart item id")
     data = await try_parse_json_body(request)
     quantity = data.get("quantity")
 
     if quantity is None:
         raise web.HTTPBadRequest(text="Missing quantity")
+    if not isinstance(quantity, int) or isinstance(quantity, bool):
+        raise web.HTTPBadRequest(text="Quantity must be an integer")
     if quantity < 1:
         raise web.HTTPBadRequest(text="Quantity must be at least 1")
 
@@ -103,7 +107,7 @@ async def update_cart_item(request : web.Request):
 
 @routes.delete("/api/cart/{id}")
 async def remove_from_cart(request : web.Request):
-    item_id = int(request.match_info["id"])
+    item_id = try_parse_int(request.match_info["id"], field="cart item id")
     
     async with get_session() as session:
         current_user_id = (await get_current_user(request)).get("user_id", "")
@@ -162,7 +166,7 @@ async def getUserCart(request : web.Request) -> web.Response:
         role = (await get_current_user(request)).get("role", "");
 
         if (role != "admin") :
-            raise web.HTTPUnauthorized(text="You are not authorised to perform this action.");
+            raise web.HTTPForbidden(text="You are not authorised to perform this action.");
 
         result = await session.execute(
             select(CartItem).where(CartItem.user_id == cartitem_user_id).options(joinedload(CartItem.product)).order_by(CartItem.id)
