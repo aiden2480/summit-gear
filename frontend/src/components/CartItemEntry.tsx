@@ -9,7 +9,6 @@ interface CartItemEntryProps {
 
 export default function CartItemEntry({ item, onUpdate, onRemove }: CartItemEntryProps) {
   //If any action is unavailable, then we should view the cart items in a read-only mode
-``` would make more sense if the user cannot edit or update items then the cart items are readonly i.e admin users
   const isReadOnly = !onUpdate || !onRemove;
 
   return (
