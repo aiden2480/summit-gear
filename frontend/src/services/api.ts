@@ -1,6 +1,6 @@
 import { CartItem, User } from "../types"
 
-const API_BASE = "http://localhost:8080/api";
+const API_BASE = import.meta.env.VITE_ROUTE;
 
 async function request<T>(url: string, token: string | null, options: RequestInit = {}): Promise<T> {
   const headers = new Headers();
