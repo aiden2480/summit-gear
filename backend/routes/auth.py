@@ -79,22 +79,21 @@ async def login(request: web.Request) -> web.Response:
     password = data.get("password", "")
 
     if not username or not password:
-        return web.json_response({"error": "Username and password required"}, status=400)
+        return web.Response(text="Username and password required", status=400)
 
     try:
         validate_email(username, check_deliverability=False)
     except EmailNotValidError as e:
-        return web.json_response({"error": f"Invalid email address: {e}"}, status=400)
+        return web.Response(text=f"Invalid email address: {e}", status=400)
 
     async with get_session() as session:
         result = await session.execute(select(User).where(User.username == username))
         user = result.scalars().first()
 
     if not user or not verify_password(password, user.hashed_password):
-        return web.json_response({"error": "Invalid credentials"}, status=401)
+        return web.Response(text="Invalid credentials", status=401)
 
     token = create_access_token(user.id, user.role)
-    # Todo replace this with user.to_dict() but requires changing frontend references from "user" to "username"
     return web.json_response({"id": str(user.id), "user": user.username, "token": token, "role": user.role, "avatar": user.avatar})
 
 
@@ -105,20 +104,20 @@ async def register(request: web.Request) -> web.Response:
     password = data.get("password", "")
 
     if not username or not password:
-        return web.json_response({"error": "Username and password required"}, status=400)
+        return web.Response(text="Username and password required", status=400)
 
     if len(password) < 8:
-        return web.json_response({"error": "Password must be at least 8 characters"}, status=400)
+        return web.Response(text="Password must be at least 8 characters", status=400)
 
     try:
         validate_email(username, check_deliverability=False)
     except EmailNotValidError as e:
-        return web.json_response({"error": f"Invalid email address: {e}"}, status=400)
+        return web.Response(text=f"Invalid email address: {e}", status=400)
 
     async with get_session() as session:
         result = await session.execute(select(User).where(User.username == username))
         if result.scalars().first():
-            return web.json_response({"error": "Username already exists"}, status=409)
+            return web.Response(text="Username already exists", status=409)
 
         new_user = User(username=username, hashed_password=hash_password(password), role="user")
         session.add(new_user)
