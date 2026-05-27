@@ -202,7 +202,7 @@ Group members and the primary areas each member owns.
 #### Backend Files
 - `backend/app.py` — Added initial application structure, registered routes
 - `backend/database/models.py` — Database model updates for admin dashboard
-- `backend/routes/user.py` — User routes and functionality
+- `backend/routes/user.py` — User routes and functionality (was moved to admin.py)
 - `backend/routes/cart.py` — Cart functionality for displaying user carts
 
 #### Frontend Files
@@ -227,9 +227,8 @@ Group members and the primary areas each member owns.
 
 #### Configuration & Documentation
 - `README.md` — Documentation updates
-- `.github/workflows/build-frontend.yml` — GitHub Actions CI workflow
 
-**Key Contributions:** Admin dashboard development, user management features, cart viewing functionality, component library creation (Card, Grid, UserCard base components).
+**Key Contributions:** Typescript migration, Admin dashboard development, user management features, admin cart viewing functionality, component library creation (Card, Grid, base components).
 
 ---
 
