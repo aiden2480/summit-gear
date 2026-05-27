@@ -19,7 +19,7 @@
   font-weight: 500;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   animation: toastSlideIn 0.3s ease, toastFadeOut 0.3s ease 2.7s forwards;
-  min-width: 220px;
+  min-width: 14rem;
 }
 
 .toast--success {
