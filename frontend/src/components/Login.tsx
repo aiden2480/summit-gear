@@ -9,23 +9,21 @@ import './Login.css';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
   const { toasts, addToast } = useToast();
 
   const handleLogin = async (e: React.SubmitEvent) => {
     e.preventDefault();
+    setError('');
     if (email.trim() && password.trim()) {
       try {
         const data = await authApi.login(email, password);
         login(data.user, data.token, data.role, data.id, data.avatar);
         navigate('/', { replace: true });
-      } catch (err) {
-        if (err instanceof Error) {
-          addToast(err.message, 'error');
-        } else {
-          addToast('Error logging in. Please try again.', 'error');
-        }
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
       }
     }
   };
@@ -65,6 +63,7 @@ const Login = () => {
           </div>
 
           <button type="submit" className="login-button">Sign In</button>
+          {error && <p className="login-error">{error}</p>}
         </form>
 
         <div className="login-footer">

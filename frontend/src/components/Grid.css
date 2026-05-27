@@ -9,12 +9,25 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0;
+  gap: 1rem;
   width: 100%;
   min-height: 18rem;
   padding: 4rem 1rem;
   color: var(--color-text-secondary);
   font-size: 0.95rem;
+}
+
+.grid__spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .grid__empty {

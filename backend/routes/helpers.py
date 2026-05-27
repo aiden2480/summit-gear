@@ -2,11 +2,18 @@ import json
 import uuid
 from aiohttp import BodyPartReader, MultipartReader, web
 
-def try_parse_uuid(input: str) -> uuid.UUID:
+def try_parse_uuid(input: str, field: str = "user ID") -> uuid.UUID:
     try:
         return uuid.UUID(input)
     except ValueError:
-        raise web.HTTPBadRequest(text="Invalid user ID")
+        raise web.HTTPBadRequest(text=f"Invalid {field}")
+
+
+def try_parse_int(input: str, field: str = "id") -> int:
+    try:
+        return int(input)
+    except (TypeError, ValueError):
+        raise web.HTTPBadRequest(text=f"Invalid {field}")
 
 
 async def try_parse_json_body(request: web.Request) -> dict:

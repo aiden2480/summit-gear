@@ -11,18 +11,14 @@ const Register = () => {
   const navigate = useNavigate();
   const { toasts, addToast } = useToast();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.SubmitEvent) => {
     e.preventDefault();
     if (email.trim() && password.trim()) {
       try {
         await authApi.register(email, password);
         navigate('/login', { replace: true });
-      } catch (err) {
-        if (err instanceof Error) {
-          addToast(err.message, 'error');
-        } else {
-          addToast('Error registering. Please try again.', 'error');
-        }
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
       }
     }
   };

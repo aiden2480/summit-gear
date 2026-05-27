@@ -1,6 +1,8 @@
-.product-card {
+.card.product-card {
   background: var(--color-surface);
+  border: none;
   border-radius: 1rem;
+  cursor: default;
   overflow: hidden;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -9,12 +11,12 @@
   animation: cardFadeIn 0.4s ease both;
 }
 
-.product-card:hover {
+.card.product-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
-.product-card:focus-visible {
+.card.product-card:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
@@ -37,7 +39,7 @@
   filter: grayscale(60%) brightness(0.8);
 }
 
-.product-card:hover .product-card__img {
+.card.product-card:hover .product-card__img {
   transform: scale(1.05);
 }
 
