@@ -15,6 +15,7 @@ export interface GridProps {
   emptyDescription?: string;
 }
 
+//This is a base component that contains all of the grid logic for both product and user grid
 export default function Grid({
   className = "",
   empty,

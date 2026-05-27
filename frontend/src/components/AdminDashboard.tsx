@@ -38,7 +38,7 @@ export default function AdminDashboard({ logoutFunc }: AdminDashboardProps) {
 
   const onCartDrawClose = () => {
     setCartOpen(false);
-    //This is done to ensure that we do not set the username back until the draw is actually closed
+    //This is done to ensure that we do not set the username back until the draw is actually closed, to ensure a smoother UX
     setTimeout(() => setSelectedUsername(null), 400);
   }
 

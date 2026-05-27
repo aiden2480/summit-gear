@@ -16,6 +16,10 @@ from routes.helpers import try_parse_multipart, try_read_bytes
 _ALLOWED_AVATAR_MIMES = {"image/png", "image/jpeg"}
 _MAX_AVATAR_BYTES = 2 * 1024 * 1024
 
+"""
+This is another set of helper functions that specifically target updating of users.
+The reason for this is because both the user and admin routes rely upon this logic, so to help enforce DRY we extracted them all into here
+"""
 
 @dataclass
 class UpdateUserPayload:
@@ -55,12 +59,12 @@ def validate_changes(payload: UpdateUserPayload, allow_role_change: bool) -> Opt
 
     return None
 
-
 async def parse_multipart(request: web.Request) -> UpdateUserPayload:
     """Parse the multipart form into an UpdateUserPayload."""
     reader = await try_parse_multipart(request)
     data: dict = {}
 
+    # this block of code is used to iterate over all of the data into the multipart request and extract them into a dictionary to be read by the route handler
     while (part := await reader.next()) is not None:
         if part.name != "avatar":
             data[part.name] = await part.text()

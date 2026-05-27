@@ -17,7 +17,7 @@ interface EditUserModalProps {
 const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg"];
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
-/** Profile editor modal. Used by users to edit themselves and by admins to edit any user. */
+/* Profile editor modal. Used by users to edit themselves and by admins to edit any user. */
 export default function EditUserModal({ user: userProp, onClose, onSaved, addToast }: EditUserModalProps) {
   const { auth, getLoggedInUser, login } = useAuth();
   const initialUser = userProp ?? getLoggedInUser();
