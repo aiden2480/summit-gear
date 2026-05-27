@@ -4,9 +4,10 @@ from typing import Optional
 from aiohttp import web
 from sqlmodel import select
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 from email_validator import validate_email, EmailNotValidError
 from database import get_session
-from database.models import User
+from database.models import User, CartItem
 from routes.auth import require_admin, hash_password
 from routes.helpers import try_parse_multipart, try_parse_uuid, try_read_bytes
 
@@ -169,3 +170,18 @@ async def delete_user(request: web.Request) -> web.Response:
         await session.commit()
 
     return web.json_response({"message": "User deleted"})
+
+
+@routes.get("/api/cart/user/{user_id}")
+@require_admin
+async def get_user_cart(request: web.Request) -> web.Response:
+    target_uuid = try_parse_uuid(request.match_info["user_id"])
+    async with get_session() as session:
+        result = await session.execute(
+            select(CartItem)
+            .where(CartItem.user_id == target_uuid)
+            .options(joinedload(CartItem.product))
+            .order_by(CartItem.id)
+        )
+        items = result.unique().scalars().all()
+        return web.json_response([item.to_dict() for item in items])
