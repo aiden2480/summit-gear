@@ -25,7 +25,6 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
   const [email, setEmail] = useState(initialUser.username);
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"user" | "admin">(initialUser.role);
-  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialUser.avatar ?? null);
@@ -52,15 +51,14 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
     if (!file) return;
 
     if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
-      setError("Profile picture must be a PNG or JPEG image");
+      addToast("Profile picture must be a PNG or JPEG image", "error");
       return;
     }
     if (file.size > MAX_AVATAR_BYTES) {
-      setError("Profile picture must be 2 MB or smaller");
+      addToast("Profile picture must be 2 MB or smaller", "error");
       return;
     }
 
-    setError(null);
     setPendingFile(file);
     setRemoveAvatar(false);
     setPreviewUrl(URL.createObjectURL(file));
@@ -70,18 +68,16 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
     setPendingFile(null);
     setPreviewUrl(null);
     setRemoveAvatar(true);
-    setError(null);
   }
 
   async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
-    setError(null);
 
     const trimmedEmail = email.trim();
     const payload: UpdateUserPayload = {};
 
     if (password.length > 0 && password.length < 8) {
-      setError("Password must be at least 8 characters");
+      addToast("Password must be at least 8 characters", "error");
       return;
     }
 
@@ -97,7 +93,7 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
       payload.removeAvatar = removeAvatar;
 
     if (Object.keys(payload).length === 0) {
-      setError("No changes to save");
+      addToast("No changes to save", "error");
       return;
     }
 
@@ -118,9 +114,7 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
       onSaved(updatedUser);
       onClose();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "Failed to update user";
-      setError(msg);
-      addToast(msg, "error");
+      addToast(e instanceof Error ? e.message : "Failed to update user", "error");
     } finally {
       setSubmitting(false);
     }
@@ -208,8 +202,6 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
               </select>
             </div>
           )}
-
-          {error && <div className="modal__error">{error}</div>}
 
           <div className="modal__actions">
             <button type="button" className="btn btn--logout" onClick={onClose} disabled={submitting}>
