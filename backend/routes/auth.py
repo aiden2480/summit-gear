@@ -1,5 +1,6 @@
 import os
 import functools
+import secrets
 import uuid
 import jwt
 import bcrypt
@@ -15,7 +16,12 @@ from routes.helpers import try_parse_json_body
 
 routes = web.RouteTableDef()
 
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "summit-gear-secret-key-change-in-production")
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    # Generate an ephemeral key so the app runs out of the box without leaking a
+    # hardcoded secret. Tokens issued before a restart will be invalidated.
+    SECRET_KEY = secrets.token_urlsafe(32)
+    print("WARNING: JWT_SECRET_KEY env var not set; using ephemeral key for this run")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
 
