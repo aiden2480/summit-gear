@@ -31,13 +31,13 @@ class UpdateUserPayload:
 
 def _validate_changes(payload: UpdateUserPayload, allow_role_change: bool) -> Optional[web.Response]:
     if payload.role is not None and not allow_role_change:
-        return web.json_response({"error": "Only admins can change roles"}, status=403)
+        return web.Response(text="Only admins can change roles", status=403)
 
     if payload.role is not None and payload.role not in ("user", "admin"):
-        return web.json_response({"error": "Invalid role"}, status=400)
+        return web.Response(text="Invalid role", status=400)
 
     if payload.password is not None and len(payload.password) < 8:
-        return web.json_response({"error": "Password must be at least 8 characters"}, status=400)
+        return web.Response(text="Password must be at least 8 characters", status=400)
 
     if payload.email is not None:
         payload.email = payload.email.strip()
@@ -45,7 +45,7 @@ def _validate_changes(payload: UpdateUserPayload, allow_role_change: bool) -> Op
             valid = validate_email(payload.email, check_deliverability=False)
             payload.email = valid.normalized
         except EmailNotValidError as e:
-            return web.json_response({"error": f"Invalid email address: {e}"}, status=400)
+            return web.Response(text=f"Invalid email address: {e}", status=400)
 
     return None
 
@@ -89,7 +89,7 @@ async def _parse_multipart(request: web.Request) -> UpdateUserPayload:
 
 async def _persist_changes(target_uuid: uuid.UUID, payload: UpdateUserPayload) -> web.Response:
     if payload.is_empty:
-        return web.json_response({"error": "No changes provided"}, status=400)
+        return web.Response(text="No changes provided", status=400)
 
     async with get_session() as session:
         result = await session.execute(select(User).where(User.id == target_uuid))
@@ -104,7 +104,7 @@ async def _persist_changes(target_uuid: uuid.UUID, payload: UpdateUserPayload) -
                 select(User).where(func.lower(User.username) == new_email.lower())
             )
             if existing.scalars().first():
-                return web.json_response({"error": "Email already in use"}, status=409)
+                return web.Response(text="Email already in use", status=409)
             user.username = new_email
 
         if payload.password is not None:
@@ -145,7 +145,7 @@ async def update_user(request: web.Request) -> web.Response:
     if err is not None:
         return err
     if payload.role is not None and caller["user_id"] == target_uuid:
-        return web.json_response({"error": "Admins cannot change their own role"}, status=400)
+        return web.Response(text="Admins cannot change their own role", status=400)
     return await _persist_changes(target_uuid, payload)
 
 
@@ -156,7 +156,7 @@ async def delete_user(request: web.Request) -> web.Response:
     target_uuid = try_parse_uuid(request.match_info["user_id"])
 
     if caller["user_id"] == target_uuid:
-        return web.json_response({"error": "Admins cannot delete their own account"}, status=400)
+        return web.Response(text="Admins cannot delete their own account", status=400)
 
     async with get_session() as session:
         result = await session.execute(select(User).where(User.id == target_uuid))

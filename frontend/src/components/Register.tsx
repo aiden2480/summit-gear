@@ -1,29 +1,31 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../services/api';
+import Toast from './Toast';
+import useToast from '../hooks/useToast';
 import './Login.css';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { toasts, addToast } = useToast();
 
   const handleRegister = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    setError('');
     if (email.trim() && password.trim()) {
       try {
         await authApi.register(email, password);
-        navigate('/login', { replace: true });
+        navigate('/login', { replace: true, state: { registered: true } });
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+        addToast(err instanceof Error ? err.message : 'Registration failed. Please try again.', "error");
       }
     }
   };
 
   return (
     <div className="login-container">
+      <Toast toasts={toasts} />
       <div className="login-card">
         <div className="login-header">
           <img src="/sunrise.svg" alt="Summit Gear" className="login-logo-img" />
@@ -57,7 +59,6 @@ const Register = () => {
           </div>
 
           <button type="submit" className="login-button">Sign Up</button>
-          {error && <p className="login-error">{error}</p>}
         </form>
 
         <div className="login-footer">
