@@ -311,17 +311,3 @@ npm run dev
 ```
 
 The development server starts at `http://localhost:5173`.
-
-## Key Implementation Details
-
-The backend uses SQLModel with aiosqlite for async database access. Product data is seeded from the database module on first run with 34 climbing gear products across 6 categories (Protection, Ropes & Slings, Hardware, Harnesses, Footwear, Apparel). The checkout endpoint atomically reduces stock for all cart items before clearing the cart.
-
-Authentication uses `passlib` with the bcrypt scheme to hash passwords before storing them, and `PyJWT` to sign tokens with an HS256 signature. Tokens expire after 24 hours. The frontend reads `user` and `token` from `localStorage` on startup — if either is missing the shop is replaced with the Login screen. The `App` component manages a single `user` state value; setting it to `null` (on sign-out) immediately shows the Login screen again without a page reload.
-
-The frontend uses React hooks for state management without additional libraries. Stock counts update in real-time after every cart operation. All colours are defined as CSS custom properties for easy theming, and shared patterns (buttons, animations) are consolidated into a single shared stylesheet.
-
-## Challenges Overcome
-
-The biggest challenge in this project was managing the cart state and ensuring the UI stayed in sync with the backend stock levels. I designed the API endpoints to handle concurrent updates and ensure that the frontend re-fetches product data after every cart change to reflect accurate stock counts.
-Another challenge was implementing the checkout flow with proper error handling for out-of-stock items. I had to ensure that the backend checks stock levels before confirming an order and that the frontend provides clear feedback to the user if an item becomes unavailable during checkout.
-Integrating authentication as a single-page overlay (rather than a separate route) required threading auth state through the component tree without a router. The solution was to manage `user` at the `App` level and conditionally render the Login/Register screens or the shop based on that single piece of state.
