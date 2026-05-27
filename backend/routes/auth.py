@@ -39,7 +39,7 @@ def create_access_token(user_id: uuid.UUID, role: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     return jwt.encode({"sub": str(user_id), "role": role, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
 
-
+# This helper method is used to get the user's information from the given JWT, to ensure that the user's details are encrypted to outsiders when sending a request
 async def get_current_user(request: web.Request) -> dict:
     """Extract and verify JWT from the Authorization header. Returns {"user_id": ..., "role": ...}."""
     auth_header = request.headers.get("Authorization", "")

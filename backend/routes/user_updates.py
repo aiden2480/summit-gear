@@ -33,6 +33,7 @@ class UpdateUserPayload:
         return not any([self.email, self.password, self.role, self.avatar_data, self.avatar_mime, self.remove_avatar])
 
 
+# helper function to enusre that all of the information for a user update request is correct and makes sense from a business perspective
 def validate_changes(payload: UpdateUserPayload, allow_role_change: bool) -> Optional[web.Response]:
     """Validate email/password/role fields. allow_role_change=False stops users promoting themselves."""
     if payload.role is not None and not allow_role_change:

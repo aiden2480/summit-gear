@@ -49,6 +49,7 @@ async def add_to_cart(request: web.Request):
         result = await session.execute(query)
         existing = result.scalar()
 
+        # This logic is to ensure that we don't try to add a product into the cart twice, and instead update the quantity of the item to prevent issues with duplicate items being in a user's cart
         if existing:
             new_qty = existing.quantity + quantity
             if new_qty > product.stock:

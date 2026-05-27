@@ -4,7 +4,6 @@ from typing import List, Optional
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import CheckConstraint, LargeBinary, Column
 
-
 class User(SQLModel, table=True):
     """User account: credentials, role for RBAC, and optional inline avatar."""
     __tablename__ = "users"
@@ -37,6 +36,7 @@ class User(SQLModel, table=True):
             "avatar": self.avatar,
         }
 
+# DB model that represents an item in the store that a user can purchase
 class Product(SQLModel, table=True):
     """Catalogue product. Seeded once at startup."""
     __tablename__ = "products"
@@ -61,7 +61,7 @@ class Product(SQLModel, table=True):
             "stock": self.stock,
         }
 
-
+# DB model that represents an item that is currently in a user's cart
 class CartItem(SQLModel, table=True):
     """A line in a user's cart. One row per (user, product) pair."""
     __tablename__ = "cart_items"
