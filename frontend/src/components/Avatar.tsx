@@ -14,6 +14,7 @@ function hashString(s: string): number {
   return Math.abs(h);
 }
 
+/** Returns a deterministic gradient based on the user id so each user gets a stable colour. */
 function gradientFor(id: string): string {
   const h = hashString(id);
   const hue1 = h % 360;
@@ -21,6 +22,7 @@ function gradientFor(id: string): string {
   return `linear-gradient(135deg, hsl(${hue1}, 65%, 45%), hsl(${hue2}, 70%, 30%))`;
 }
 
+/** Avatar circle showing the user's photo, or their initial on a coloured gradient as a fallback. */
 export default function Avatar({ user, size = "md" }: AvatarProps) {
   const initial = (user.username || "?").charAt(0).toUpperCase();
   const style = { background: gradientFor(user.id) };

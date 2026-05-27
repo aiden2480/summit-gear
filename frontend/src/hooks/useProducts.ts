@@ -4,6 +4,7 @@ import type { Product, ToastType } from "../types";
 
 type AddToast = (message: string, type?: ToastType) => void;
 
+/** Manages the products list, search, category filter, and stock refresh after checkout. */
 export default function useProducts(addToast: AddToast) {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);

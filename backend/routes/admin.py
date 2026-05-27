@@ -17,6 +17,7 @@ routes = web.RouteTableDef()
 
 @dataclass
 class UpdateUserPayload:
+    """Admin edit payload: only updates the fields the admin filled in to the user."""
     email: Optional[str] = None
     password: Optional[str] = None
     role: Optional[str] = None
@@ -31,6 +32,7 @@ class UpdateUserPayload:
 
 
 def _validate_changes(payload: UpdateUserPayload, allow_role_change: bool) -> Optional[web.Response]:
+    """Validate email/password/role fields. allow_role_change=False stops users promoting themselves."""
     if payload.role is not None and not allow_role_change:
         return web.Response(text="Only admins can change roles", status=403)
 
@@ -56,6 +58,7 @@ _MAX_AVATAR_BYTES = 2 * 1024 * 1024
 
 
 async def _parse_multipart(request: web.Request) -> UpdateUserPayload:
+    """Parse the multipart form into an UpdateUserPayload."""
     reader = await try_parse_multipart(request)
     data: dict = {}
 
@@ -89,6 +92,7 @@ async def _parse_multipart(request: web.Request) -> UpdateUserPayload:
 
 
 async def _persist_changes(target_uuid: uuid.UUID, payload: UpdateUserPayload) -> web.Response:
+    """Write the payload fields to the target user."""
     if payload.is_empty:
         return web.Response(text="No changes provided", status=400)
 
@@ -175,6 +179,7 @@ async def delete_user(request: web.Request) -> web.Response:
 @routes.get("/api/cart/user/{user_id}")
 @require_admin
 async def get_user_cart(request: web.Request) -> web.Response:
+    """Return the cart items belonging to any user. Admin only."""
     target_uuid = try_parse_uuid(request.match_info["user_id"])
     async with get_session() as session:
         result = await session.execute(
