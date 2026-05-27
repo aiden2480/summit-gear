@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../services/api';
 import Toast from './Toast';
@@ -9,21 +9,31 @@ import './Login.css';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const location = useLocation();
   const navigate = useNavigate();
   const { login } = useAuth();
   const { toasts, addToast } = useToast();
 
+  const registered = (location.state as { registered?: boolean })?.registered;
+  const toastedRef = useRef(false);
+
+  useEffect(() => {
+    if (registered && !toastedRef.current) {
+      toastedRef.current = true;
+      addToast("Account created! Sign in to get started.", "success");
+    }
+  });
+
   const handleLogin = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    setError('');
+
     if (email.trim() && password.trim()) {
       try {
         const data = await authApi.login(email, password);
         login(data.user, data.token, data.role, data.id, data.avatar);
         navigate('/', { replace: true });
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+        addToast(err instanceof Error ? err.message : 'Login failed. Please try again.', "error");
       }
     }
   };
@@ -58,12 +68,12 @@ const Login = () => {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              minLength={8}
               required
             />
           </div>
 
           <button type="submit" className="login-button">Sign In</button>
-          {error && <p className="login-error">{error}</p>}
         </form>
 
         <div className="login-footer">

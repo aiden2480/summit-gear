@@ -16,9 +16,9 @@ const Register = () => {
     if (email.trim() && password.trim()) {
       try {
         await authApi.register(email, password);
-        navigate('/login', { replace: true });
+        navigate('/login', { replace: true, state: { registered: true } });
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : 'Registration failed. Please try again.');
+        addToast(err instanceof Error ? err.message : 'Registration failed. Please try again.', "error");
       }
     }
   };

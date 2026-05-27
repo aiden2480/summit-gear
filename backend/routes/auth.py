@@ -73,7 +73,7 @@ def require_admin(handler):
     return wrapper
 
 
-@routes.post("/login")
+@routes.post("/api/login")
 async def login(request: web.Request) -> web.Response:
     data = await try_parse_json_body(request)
     username = data.get("username", "").strip()
@@ -101,7 +101,7 @@ async def login(request: web.Request) -> web.Response:
     return web.json_response({"id": str(user.id), "user": user.username, "token": token, "role": user.role, "avatar": user.avatar})
 
 
-@routes.post("/register")
+@routes.post("/api/register")
 async def register(request: web.Request) -> web.Response:
     data = await try_parse_json_body(request)
     username = data.get("username", "").strip()
