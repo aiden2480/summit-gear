@@ -2,6 +2,10 @@ import json
 import uuid
 from aiohttp import BodyPartReader, MultipartReader, web
 
+"""
+These are a group of helper functions that are used across multiple files, they're defined here to help us follow DRY
+"""
+
 def try_parse_uuid(input: str, field: str = "user ID") -> uuid.UUID:
     try:
         return uuid.UUID(input)

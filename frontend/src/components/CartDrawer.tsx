@@ -28,7 +28,7 @@ export default function CartDrawer({ open, cartItems, cartTotal, onClose, select
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");
   const { auth } = useAuth();
-  //If there is no way to perform an action on the cart itself or items in a cart then we should be viewing the cart in a read-only mode
+  //If we don't have a way to perform an action then we view the items in read-only mode, since this indicates that we're viewing a user's cart as an admin
   const isReadOnly = !onUpdate || !onRemove || !onClear || !onCheckoutSuccess;
   const hasFooterActions = onCheckoutSuccess || onClear;
 

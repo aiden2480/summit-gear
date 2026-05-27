@@ -14,6 +14,7 @@ export default function HomePage() {
 
   return (
     <>
+      { /* Conditionally render the home page depending on whether the user's role is an admin or not, so that we show each user the correct home page */ }
       { auth.role === "admin" ?
           <AdminDashboard logoutFunc={handleLogout} />
         : 

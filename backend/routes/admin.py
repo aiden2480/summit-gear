@@ -9,6 +9,10 @@ from routes.helpers import try_parse_uuid
 from routes.user_updates import parse_multipart, persist_changes, validate_changes
 
 
+"""
+These are routes that have been seperated out into their own file to ensure that they're not exposed to the public, as they're all administrator only.
+"""
+
 routes = web.RouteTableDef()
 
 
