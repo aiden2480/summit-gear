@@ -35,6 +35,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 
 def create_access_token(user_id: uuid.UUID, role: str) -> str:
+    """Sign a JWT carrying user id and role; expires after ACCESS_TOKEN_EXPIRE_MINUTES."""
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     return jwt.encode({"sub": str(user_id), "role": role, "exp": expire}, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -95,6 +96,7 @@ async def login(request: web.Request) -> web.Response:
         return web.Response(text=f"Invalid email address: {e}", status=400)
 
     async with get_session() as session:
+        # Case-insensitive lookup so "Bob@x.com" matches "bob@x.com".
         result = await session.execute(
             select(User).where(func.lower(User.username) == username.lower())
         )

@@ -6,6 +6,7 @@ interface SearchBarProps {
   onChange: (value: string) => void;
 }
 
+/** Search input that waits for the user to stop typing before notifying the parent. */
 export default function SearchBar({ value, onChange }: SearchBarProps) {
   const [internalValue, setInternalValue] = useState(value);
   const delay = 300;

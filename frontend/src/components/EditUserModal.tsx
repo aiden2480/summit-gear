@@ -17,6 +17,7 @@ interface EditUserModalProps {
 const ALLOWED_AVATAR_TYPES = ["image/png", "image/jpeg"];
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 
+/** Profile editor modal. Used by users to edit themselves and by admins to edit any user. */
 export default function EditUserModal({ user: userProp, onClose, onSaved, addToast }: EditUserModalProps) {
   const { auth, getLoggedInUser, login } = useAuth();
   const initialUser = userProp ?? getLoggedInUser();
@@ -45,6 +46,7 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  // Validates the chosen file and shows an instant preview before upload.
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -70,6 +72,7 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
     setRemoveAvatar(true);
   }
 
+  // Only sends fields the user actually changed; refuses to submit an empty form.
   async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
 
