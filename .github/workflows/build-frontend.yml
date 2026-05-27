@@ -3,7 +3,7 @@ name: build-frontend
 on:
   pull_request:
     branches: [ main ]
-    types: [ ready_for_review, review_requested ]
+    types: [ opened, synchronize, ready_for_review ]
 
 jobs:
   build-frontend:
