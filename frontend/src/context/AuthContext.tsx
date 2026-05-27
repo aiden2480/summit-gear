@@ -63,12 +63,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.storageArea !== localStorage) return;
-      if (!e.key || ["user", "userId", "token", "role"].includes(e.key)) {
+      if (!e.key || ["user", "userId", "token", "role", "avatar"].includes(e.key)) {
         setAuth({
           user: localStorage.getItem("user"),
           userId: localStorage.getItem("userId"),
           token: localStorage.getItem("token"),
           role: localStorage.getItem("role"),
+          avatar: localStorage.getItem("avatar"),
         });
       }
     };
