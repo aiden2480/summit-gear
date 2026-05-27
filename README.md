@@ -202,7 +202,7 @@ Group members and the primary areas each member owns.
 #### Backend Files
 - `backend/app.py` — Added initial application structure, registered routes
 - `backend/database/models.py` — Database model updates for admin dashboard
-- `backend/routes/user.py` — User routes and functionality (was moved to admin.py)
+- `backend/routes/user.py` — User self-management endpoint (`PUT /api/users/me`)
 - `backend/routes/cart.py` — Cart functionality for displaying user carts
 
 #### Frontend Files
