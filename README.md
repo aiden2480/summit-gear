@@ -1,8 +1,10 @@
 # Summit Gear — Climbing Equipment Store
 
-## Summary
+## Problem Statement
 
-Climbing gear is typically sold through general outdoor retailers where it's buried alongside camping, cycling, and ski equipment, making it hard for climbers to browse a focused catalogue. Summit Gear is a lightweight single-page e-commerce application that solves this by providing a dedicated storefront for climbing equipment. Users must log in or register before accessing the store. Once authenticated, they can browse 34 products across 6 categories, filter by category, search, add items to a shopping cart, and complete a checkout process. The application features a dark mode UI with green accents, custom SVG icons, and smooth animations.
+Climbing gear is typically sold through general outdoor retailers where it's buried alongside camping, cycling, and ski equipment, making it hard for climbers to browse a focused catalogue. 
+
+Summit Gear is a lightweight single-page e-commerce application that solves this by providing a dedicated storefront for climbing equipment. Users must log in or register before accessing the store. Once authenticated, they can browse 34 products across 6 categories, filter by category, search, add items to a shopping cart, and complete a checkout process. The application features a dark mode UI with green accents, custom SVG icons, and smooth animations.
 
 ## Tech Stack
 
@@ -94,7 +96,7 @@ Climbing gear is typically sold through general outdoor retailers where it's bur
 
 All `/api/*` endpoints except `/api/login` and `/api/register` require a `Bearer` JWT. Admin endpoints additionally verify the user's `role` server-side.
 
-## Directory Structure
+## Project Structure
 
 ```
 backend/
@@ -283,7 +285,7 @@ Group members and the primary areas each member owns.
 
 ---
 
-## Getting Started
+## Setup
 
 ### Prerequisites
 
