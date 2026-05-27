@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 
 type AddToast = (message: string, type?: ToastType) => void;
 
+/** Manages the current user's cart: load, add, update, remove, clear. */
 export default function useCart(addToast: AddToast) {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);

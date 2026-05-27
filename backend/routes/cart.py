@@ -4,12 +4,13 @@ from sqlalchemy.orm import joinedload
 from database import get_session
 from database.models import CartItem, Product
 from routes.auth import get_current_user
-from routes.helpers import try_parse_uuid, try_parse_int, try_parse_json_body
+from routes.helpers import try_parse_int, try_parse_json_body
 
 routes = web.RouteTableDef()
 
 @routes.get("/api/cart")
 async def get_cart(request: web.Request):
+    """Return the cart items belonging to the authenticated caller."""
     async with get_session() as session:
         user_id = (await get_current_user(request)).get("user_id", "")
         result = await session.execute(
@@ -138,7 +139,6 @@ async def clear_cart(request: web.Request):
 @routes.post("/api/checkout")
 async def checkout(request: web.Request):
     """Atomically validates stock, reduces quantities, and clears the cart."""
-
     async with get_session() as session:
         current_user_id = (await get_current_user(request)).get("user_id", "")
         result = await session.execute(select(CartItem).where(CartItem.user_id == current_user_id).options(joinedload(CartItem.product)))
@@ -157,21 +157,3 @@ async def checkout(request: web.Request):
         await session.commit()
 
     return web.json_response({"status": "success", "message": "Order placed successfully"})
-
-@routes.get("/api/cart/user/{user_id}")
-async def get_user_cart(request: web.Request) -> web.Response:
-    async with get_session() as session:
-        cartitem_user_id = try_parse_uuid(request.match_info["user_id"])
-
-        role = (await get_current_user(request)).get("role", "")
-
-        if role != "admin":
-            raise web.HTTPForbidden(text="You are not authorised to perform this action.")
-
-        result = await session.execute(
-            select(CartItem).where(CartItem.user_id == cartitem_user_id).options(joinedload(CartItem.product)).order_by(CartItem.id)
-        )
-        items = result.unique().scalars().all()
-
-        return web.json_response([item.to_dict() for item in items])
-

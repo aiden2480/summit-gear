@@ -23,6 +23,7 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Checkout failed. Please try again.";
 }
 
+/** Slide-out cart panel. Becomes read-only (no edit/checkout) when used to view another user's cart. */
 export default function CartDrawer({ open, cartItems, cartTotal, onClose, selectedUsername, onUpdate, onRemove, onClear, onCheckoutSuccess, addToast }: CartDrawerProps) {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderId, setOrderId] = useState("");

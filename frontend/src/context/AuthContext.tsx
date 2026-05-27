@@ -18,6 +18,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+/** Provides auth state to the app and syncs it with localStorage across tabs. */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [auth, setAuth] = useState<AuthState>({
     user: localStorage.getItem("user"),
@@ -55,11 +56,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuth({ user: null, userId: null, token: null, role: null, avatar: null });
   };
 
+  // Listen for 401 responses from the API layer and force a logout.
   useEffect(() => {
     window.addEventListener("auth:unauthorized", logout);
     return () => window.removeEventListener("auth:unauthorized", logout);
   }, []);
 
+  // Sync auth state across browser tabs: logout/login in one tab updates the others.
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.storageArea !== localStorage) return;
@@ -84,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/** Access the auth state and login/logout helpers from any component. */
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within an AuthProvider");

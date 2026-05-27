@@ -6,6 +6,7 @@ from sqlalchemy import CheckConstraint, LargeBinary, Column
 
 
 class User(SQLModel, table=True):
+    """User account: credentials, role for RBAC, and optional inline avatar."""
     __tablename__ = "users"
     __table_args__ = (
         CheckConstraint("role IN ('user', 'admin')", name="ck_users_role"),
@@ -37,6 +38,7 @@ class User(SQLModel, table=True):
         }
 
 class Product(SQLModel, table=True):
+    """Catalogue product. Seeded once at startup."""
     __tablename__ = "products"
 
     id: int = Field(default=None, primary_key=True)
@@ -61,6 +63,7 @@ class Product(SQLModel, table=True):
 
 
 class CartItem(SQLModel, table=True):
+    """A line in a user's cart. One row per (user, product) pair."""
     __tablename__ = "cart_items"
 
     id: int = Field(default=None, primary_key=True)

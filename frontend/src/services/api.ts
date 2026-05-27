@@ -4,6 +4,7 @@ const API_BASE = "http://localhost:8080/api";
 
 type Token = string | null;
 
+/** Error thrown when an API request fails. */
 export class ApiError extends Error {
   status: number;
   body: unknown;
@@ -38,6 +39,7 @@ async function request<T>(url: string, token: Token, options: RequestInit = {}):
   if (token) {
     headers.append("Authorization", `Bearer ${token}`);
   }
+  // Only set JSON header for plain text bodies; file uploads need to set their own.
   if (typeof options.body === "string" && !headers.has("Content-Type")) {
     headers.append("Content-Type", "application/json");
   }
@@ -45,6 +47,7 @@ async function request<T>(url: string, token: Token, options: RequestInit = {}):
   const res = await fetch(`${API_BASE}${url}`, { headers, ...options });
 
   if (!res.ok) {
+    // Log the user out if their session is no longer valid.
     if (res.status === 401) {
       window.dispatchEvent(new CustomEvent("auth:unauthorized"));
     }
@@ -132,6 +135,7 @@ export const userApi = {
     del<{ message: string }>(`/users/${userId}`, token),
 }
 
+/** Build the form data for updating a user's profile. */
 function buildUpdateForm(payload: UpdateUserPayload): FormData {
   const form = new FormData();
   if (payload.email) form.append("email", payload.email);
