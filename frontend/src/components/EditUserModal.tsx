@@ -208,7 +208,7 @@ export default function EditUserModal({ user: userProp, onClose, onSaved, addToa
               Cancel
             </button>
             <button type="submit" className="btn btn--success" disabled={submitting}>
-              {submitting ? "Saving..." : "Save Changes"}
+              Save Changes
             </button>
           </div>
         </form>

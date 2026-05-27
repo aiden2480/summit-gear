@@ -3,7 +3,6 @@
   border-radius: 0.5rem;
   background: var(--color-bg-secondary);
   transition: all 0.2s ease-out;
-  cursor: pointer;
   overflow: hidden;
 }
 
