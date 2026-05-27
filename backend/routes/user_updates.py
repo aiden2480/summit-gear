@@ -1,10 +1,4 @@
 """Shared logic for updating a user record.
-
-Both the admin endpoints (`routes/admin.py`) and the self-service endpoint
-(`routes/user.py`) need to parse the same multipart payload, run the same
-validation, and write the same fields. Living together here lets both
-modules import these helpers without one route file reaching into the
-internals of the other.
 """
 
 import uuid
